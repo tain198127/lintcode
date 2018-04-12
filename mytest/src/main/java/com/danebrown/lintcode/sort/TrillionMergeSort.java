@@ -19,11 +19,11 @@ public class TrillionMergeSort {
 
     public static void main(String args[]) throws IOException {
         TrillionMergeSort sort = new TrillionMergeSort();
-        sort.generateTrillionData(1000000000);
+        sort.generateTrillionData(10000000);
     }
 
     /**
-     * 生成十亿数据，写入到文件中
+     * 生成十亿数据，写入到文件中[完成]
      *
      * @param size 要生成的数据大小
      */
@@ -35,6 +35,7 @@ public class TrillionMergeSort {
 
         try(PrintWriter pw=new PrintWriter(new FileWriter(new File(SOURCE_DATA_NAME),true))){
             int j = 0;
+            int k = 0;
             if (size < STACK_SIZE)
                 return;
             while (j < size) {
@@ -48,8 +49,9 @@ public class TrillionMergeSort {
                     j++;
 
                 }//end for
+                k++;
                 pw.flush();
-
+                System.out.printf("写入了%s次\n",k);
             }//end whild
         }
 
