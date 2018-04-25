@@ -31,7 +31,7 @@ public class TrillionMergeSort {
     private static String TEMP_FILE_NAME = "tmp-[%s].txt";
 
     /**
-     * 拆分为小文件时，每个文件的行数
+     * 拆分为小文件时，每个文件的行数，所以每个文件的内容为STACK_SIZE*SPLIT_FILE_LINE_SIZE那么多整数
      */
     private static int SPLIT_FILE_LINE_SIZE = 3;
 
@@ -39,10 +39,11 @@ public class TrillionMergeSort {
 
     SplittableRandom sr = new SplittableRandom();
     private static void  print_menu(){
-        System.out.print("1:generate trillion data\n " +
-                "2: split trillion data\n" +
-                "3: sort trillion and combin file\n" +
-                "0：quite\n" +
+        System.out.print(
+                "1:generate trillion data\n " +
+                "2:split trillion data\n" +
+                "3:sort trillion and combin file\n" +
+                "0:quite\n" +
                 "please input:");
     }
     public static void main(String args[]) throws Exception {
@@ -72,8 +73,6 @@ public class TrillionMergeSort {
         });
         String read = "";
         Scanner scanner = new Scanner(System.in);
-//        if(console == null)
-//            throw new Exception("error console object");
         while(!read.equals("0")){
             print_menu();
              read= scanner.nextLine();
@@ -83,8 +82,6 @@ public class TrillionMergeSort {
 
         }
 
-////        sort.generateTrillionData(10000000);
-//        sort.splitTrillionData();
     }
 
     /**
@@ -151,7 +148,8 @@ public class TrillionMergeSort {
                 if (count > SPLIT_FILE_LINE_SIZE) {
                     times++;
                     count = 0;
-                    tempSort.sort(Comparator.comparingInt(o -> o));
+                    quickSort(tempSort);
+                    //tempSort.sort(Comparator.comparingInt(o -> o));
                     for (int i = 0; i < tempSort.size(); i++) {
                         br.printf("%s,", tempSort.get(i));
                         if ((i + 1) % STACK_SIZE == 0) {
@@ -172,16 +170,17 @@ public class TrillionMergeSort {
     }
 
     /**
-     * 对每一块进行快排
+     * 对每一块进行快排[需要完善和优化，目前使用的是系统自带的排序方法]
      */
-    private void quickSort() {
-
+    private void quickSort(LinkedList<Integer> array) {
+        array.sort(Comparator.comparingInt(o -> o));
     }
 
     /**
-     * 合并，并且写入到文件中
+     * 进行合并的第一步，搜集所有临时文件[完成]
+     * @return 文件元信息；
      */
-    private void merge() {
+    private List<File> collectionTempFileList(){
         List<File> files = new ArrayList<>();
         int times = 0;
         while (true){
@@ -191,6 +190,17 @@ public class TrillionMergeSort {
                 break;
             files.add(tmpFile);
         }
+        return files;
+    }
+    private void  mergeSort(InputStream a, InputStream b, OutputStream out){
+
+    }
+    /**
+     * 合并，并且写入到文件中
+     */
+    private void merge() {
+        List<File> files = collectionTempFileList();
+
         System.out.println("读取完毕");
         System.out.println(g.toJson(files));
     }
