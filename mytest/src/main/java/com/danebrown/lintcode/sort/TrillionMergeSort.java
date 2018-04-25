@@ -1,14 +1,14 @@
 package com.danebrown.lintcode.sort;
 
-import org.apache.commons.lang3.StringUtils;
+
+
+import com.google.gson.Gson;
 
 import java.io.*;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedList;
-import java.util.SplittableRandom;
+import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.function.Function;
 
-import static org.apache.commons.lang3.StringUtils.split;
 
 /**
  * 十亿级排序，采用归并算法
@@ -19,6 +19,7 @@ import static org.apache.commons.lang3.StringUtils.split;
  * 4. 对每块进行 MERGE并写入到文件中
  */
 public class TrillionMergeSort {
+    Gson g = new Gson();
     /**
      * 创建文件时，flush 的大小，表示每行有多少个数字
      */
@@ -28,16 +29,62 @@ public class TrillionMergeSort {
      */
     private static String SOURCE_DATA_NAME = "SOURCE.txt";
     private static String TEMP_FILE_NAME = "tmp-[%s].txt";
+
     /**
      * 拆分为小文件时，每个文件的行数
      */
     private static int SPLIT_FILE_LINE_SIZE = 3;
-    SplittableRandom sr = new SplittableRandom();
 
-    public static void main(String args[]) throws IOException {
+    private List<String> filesName= new ArrayList<>();
+
+    SplittableRandom sr = new SplittableRandom();
+    private static void  print_menu(){
+        System.out.print("1:generate trillion data\n " +
+                "2: split trillion data\n" +
+                "3: sort trillion and combin file\n" +
+                "0：quite\n" +
+                "please input:");
+    }
+    public static void main(String args[]) throws Exception {
         TrillionMergeSort sort = new TrillionMergeSort();
-//        sort.generateTrillionData(10000000);
-        sort.splitTrillionData();
+
+        HashMap<String, Callable> menu = new HashMap<>();
+        menu.put("1", new Callable() {
+            @Override
+            public Object call() throws Exception {
+                sort.generateTrillionData(10000000);
+                return null;
+            }
+        });
+        menu.put("2", new Callable() {
+            @Override
+            public Object call() throws Exception {
+                sort.splitTrillionData();
+                return null;
+            }
+        });
+        menu.put("3", new Callable() {
+            @Override
+            public Object call() throws Exception {
+                sort.merge();
+                return null;
+            }
+        });
+        String read = "";
+        Scanner scanner = new Scanner(System.in);
+//        if(console == null)
+//            throw new Exception("error console object");
+        while(!read.equals("0")){
+            print_menu();
+             read= scanner.nextLine();
+             if(read.equals("exit")||read.equals("0"))
+                 break;
+             menu.get(read).call();
+
+        }
+
+////        sort.generateTrillionData(10000000);
+//        sort.splitTrillionData();
     }
 
     /**
@@ -115,6 +162,7 @@ public class TrillionMergeSort {
 
                         br.flush();
                         br.close();
+                        filesName.add(fileName);
                         System.out.println(fileName + "写入完毕");
                     }
                 }
@@ -134,6 +182,16 @@ public class TrillionMergeSort {
      * 合并，并且写入到文件中
      */
     private void merge() {
+        List<File> files = new ArrayList<>();
+        int times = 0;
+        while (true){
 
+            File tmpFile = new File(String.format(TEMP_FILE_NAME, times++));
+            if(!tmpFile.exists())
+                break;
+            files.add(tmpFile);
+        }
+        System.out.println("读取完毕");
+        System.out.println(g.toJson(files));
     }
 }

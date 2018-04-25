@@ -20,26 +20,26 @@ package com.danebrown.lintcode.lrucache;
  * Created by dane on 2018/1/16.
  */
 public class LRUCacheNode {
-    public static void main(String[] args){
-        LRUCache cache =new LRUCache(10);
-       cache.set(7, 28);
+    public static void main(String[] args) {
+        LRUCache cache = new LRUCache(10);
+        cache.set(7, 28);
         cache.set(7, 1);
         cache.set(8, 15);
-        System.out.printf("[%s]",cache.get(6));
+        System.out.printf("[%s]", cache.get(6));
         cache.set(10, 27);
         cache.set(8, 10);
-        System.out.printf("[%s]",cache.get(8));
+        System.out.printf("[%s]", cache.get(8));
         cache.set(6, 29);
         cache.set(1, 9);
-        System.out.printf("[%s]",cache.get(6));
+        System.out.printf("[%s]", cache.get(6));
         cache.set(10, 7);
-        System.out.printf("[%s]",cache.get(1));
-        System.out.printf("[%s]",cache.get(2));
-        System.out.printf("[%s]",cache.get(13));
+        System.out.printf("[%s]", cache.get(1));
+        System.out.printf("[%s]", cache.get(2));
+        System.out.printf("[%s]", cache.get(13));
         cache.set(8, 30);
         cache.set(1, 5);
-        System.out.printf("[%s]",cache.get(1));
+        System.out.printf("[%s]", cache.get(1));
         cache.set(13, 2);
-        System.out.printf("[%s]",cache.get(12));
+        System.out.printf("[%s]", cache.get(12));
     }
 }
