@@ -1,4 +1,4 @@
-package main.java.com.danebrown.lintcode.leetcode;
+package com.danebrown.lintcode.leetcode;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -11,6 +11,7 @@ public class ValidNumber {
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
             while (true) {
+                System.out.print("请输入要检查的数字，若要退出请输入quit:");
                 String input = reader.readLine();
                 if (input.equals("quit"))
                     break;
@@ -31,7 +32,7 @@ public class ValidNumber {
             return false;
         char c = str.charAt(str.length() - 1);
         int endcode = (int) c;
-        System.out.println(endcode);
+//        System.out.println(endcode);
         if (endcode < 46 || endcode > 57)
             return false;
 
