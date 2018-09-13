@@ -71,8 +71,8 @@ public class TrillionMergeSort {
                         "please input:");
     }
 
+
     public static void main(String args[]) throws Exception {
-    public static void main(String args[]) throws IOException {
 
         TrillionMergeSort sort = new TrillionMergeSort();
 
