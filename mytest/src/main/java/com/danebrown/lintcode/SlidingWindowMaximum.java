@@ -22,39 +22,39 @@ import java.util.*;
  * Created by dane on 2017/8/9.
  */
 public class SlidingWindowMaximum {
-    public static void main(String[] arg){
+    public static void main(String[] arg) {
         SlidingWindowMaximum test = new SlidingWindowMaximum();
 
-        Map<int[],Integer> input = new HashMap<>();
+        Map<int[], Integer> input = new HashMap<>();
 
-        input.put(new int[]{1,2,7,7,2},3);
-        input.put(new int[]{1,2,7,7,2},1);
+        input.put(new int[]{1, 2, 7, 7, 2}, 3);
+        input.put(new int[]{1, 2, 7, 7, 2}, 1);
         input.keySet().forEach(ints -> {
             int i = input.get(ints);
-            ArrayList<Integer> result =test.maxSlidingWindow(ints,i);
+            ArrayList<Integer> result = test.maxSlidingWindow(ints, i);
             System.out.println(result);
         });
 
     }
+
     public ArrayList<Integer> maxSlidingWindow(int[] nums, int k) {
         // write your code here
         ArrayList<Integer> result = new ArrayList<>();
-        Collections.fill(result,Integer.MIN_VALUE);
+        Collections.fill(result, Integer.MIN_VALUE);
         List<Integer> args = new ArrayList<>();
-        for(int i = 0; i < nums.length;i++){
+        for (int i = 0; i < nums.length; i++) {
             args.add(nums[i]);
         }
-        int gap = nums.length - k+1;
+        int gap = nums.length - k + 1;
         //int max = Collections.max(args.subList(0,k));
         //result.add(max);
         int max = Integer.MAX_VALUE;
-        for(int i = 0; i < gap; i++){
-            if(args.get(i+k-1)>=max){
-                max = args.get(i+k-1);
+        for (int i = 0; i < gap; i++) {
+            if (args.get(i + k - 1) >= max) {
+                max = args.get(i + k - 1);
                 result.add(max);
-            }
-            else{
-                max = Collections.max(args.subList(i,i+k-1));
+            } else {
+                max = Collections.max(args.subList(i, i + k - 1));
                 result.add(max);
             }
 
