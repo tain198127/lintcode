@@ -2,6 +2,10 @@ package com.danebrown.lentcode;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author DaneBrown
@@ -17,37 +21,84 @@ public class DynamicProgramingMinCoinCombin {
      * 如果是10元，可以是10，20，50元
      * 如果是百元，不用动态规划
      */
-    private static final int unit[] = new int[]{1,2,5};
+    private static final int unit[] = new int[]{0,1,2,5};
 
     public static void main(String[] args) {
         DynamicProgramingMinCoinCombin dynamicProgramingMinCoinCombin = new DynamicProgramingMinCoinCombin();
-        int times = dynamicProgramingMinCoinCombin.countMinCoin(8,null);
+//        int times = dynamicProgramingMinCoinCombin.countMinCoin(8,null);
+
+        List<Integer> output = new ArrayList<>();
+        int times = dynamicProgramingMinCoinCombin.countMinCoin_My(9,output);
         System.out.println(times);
     }
 
+
     /**
      * 计算最小组合
-     * @param money 目标金额，单位是分
+     * @param money 目标金额
      * @param outCoinSquence 输出，硬币的顺序
      * @return 次数
      */
-    public int countMinCoin(int money, ArrayList<Integer> outCoinSquence){
-        //记录金额
-        int dp[] = new int[money+1];
-        //假定目标金额，全部都用1(分/角/元/拾元)来计算
-        Arrays.fill(dp,1);
-        dp[0] = 0;//第一位记做0；
-        //每一位做循环
-        for(int i = 1; i<=money;i++){
-            //循环扫描元unit中的每个单位
-            for(int j = 0; j <unit.length;j++){
-                if(i>= unit[j] || dp[i-unit[j]]+1 < dp[i]){
-                    dp[i] = dp[i-unit[j]+1];
+    public int countMinCoin_My(int money, List<Integer> outCoinSquence){
+        int wegiht_unit[] = new int[]{2,5};
+        //
+        /**
+         * 状态转移变量
+         * 例如：
+         * 1->1  BASE LV=1
+         * 2->1  BASE LV=2
+         * 3—>2+1->2 LV=2
+         * 4->2+2->2 LV=2
+         * 5->1  BASE LV=5
+         * 6->5+1->2 LV=5
+         * 7->5+2——>2 转移 LV=5
+         * 8->7+1|5+2+1->3 LV=5
+         * 9->5+2+2->3 转移 LV=5
+         * 10->5+5->2 变化
+         */
+        Map<Integer,Integer> status = new HashMap<>();
+
+        //金额、次数
+        List<Integer> list = new ArrayList<>(money);
+        int coin=0;
+//        Collections.fill(list,0);
+        //如果没找到，就按最多次数算。
+        //算法复杂度N
+        for(int i =0; i <= money; i++){
+            list.add(i);
+        }
+        //最后一次转移的时候的值
+        int lastTransValue = 0;
+        //算法复杂度i*j
+        for(int i = 1; i <= money; i++){
+            int finalI = i;
+            //状态转移[如果属于原始unit，直接设置为1]
+            if(Arrays.stream(unit).anyMatch(item->item == finalI)){
+                list.set(i,1);
+                lastTransValue = i;
+            }
+            else{
+                //最后一次转移值和现值的差
+                int gap =i - lastTransValue;
+                //如果这个差能在原始unit中找到(除了0和1以外)，那么直接在上一次转移值次数上加1
+                if(Arrays.stream(wegiht_unit).anyMatch(item->item == gap)){
+                    list.set(i, list.get(lastTransValue) + 1);
+                    //作为新的转移值
+                    lastTransValue = i;
+                }
+                else {
+                    //判断"前一个次数+1"，和"上一次转移值的次数"+"转移差的次数"。哪个大，就设定为几；
+                    int min = Math.min(list.get(i - 1) + 1, list.get(lastTransValue)+list.get(gap));
+                    list.set(i, min);
                 }
             }
-        }
-        Arrays.stream(dp).forEach(item->System.out.println(item));
-        return dp[money];
 
+        }
+        for(int i = 0; i < list.size();i++){
+            outCoinSquence.add(list.get(i));
+        }
+        return list.get(money);
     }
+
+
 }
