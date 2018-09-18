@@ -21,6 +21,7 @@ public class DynamicProgramingMinCoinCombin {
      * 如果是10元，可以是10，20，50元
      * 如果是百元，不用动态规划
      */
+//    private static final int unit[] = new int[]{0,1,2,5,10,20,50,100,200,500,1000,2000,5000,100000};
     private static final int unit[] = new int[]{0,1,2,5};
 
     public static void main(String[] args) {
@@ -28,7 +29,7 @@ public class DynamicProgramingMinCoinCombin {
 //        int times = dynamicProgramingMinCoinCombin.countMinCoin(8,null);
 
         List<Integer> output = new ArrayList<>();
-        int times = dynamicProgramingMinCoinCombin.countMinCoin_My(9,output);
+        int times = dynamicProgramingMinCoinCombin.countMinCoin_My(10,output);
         System.out.println(times);
     }
 
@@ -40,7 +41,7 @@ public class DynamicProgramingMinCoinCombin {
      * @return 次数
      */
     public int countMinCoin_My(int money, List<Integer> outCoinSquence){
-        int wegiht_unit[] = new int[]{2,5};
+        int wegiht_unit[] = Arrays.stream(unit).skip(2).toArray();
         //
         /**
          * 状态转移变量
@@ -88,8 +89,16 @@ public class DynamicProgramingMinCoinCombin {
                 }
                 else {
                     //判断"前一个次数+1"，和"上一次转移值的次数"+"转移差的次数"。哪个大，就设定为几；
-                    int min = Math.min(list.get(i - 1) + 1, list.get(lastTransValue)+list.get(gap));
-                    list.set(i, min);
+//                    int min = Math.min(list.get(i - 1) + 1, list.get(lastTransValue)+list.get(gap));
+//                    list.set(i, min);
+
+                    //别人的算法
+                    for(int j = 0; j < unit.length;j++){
+                        if(i>unit[j] && list.get(i-unit[j])+1<list.get(i)){
+                            list.set(i,list.get(i-unit[j])+1);
+                        }
+                    }
+
                 }
             }
 
@@ -97,6 +106,7 @@ public class DynamicProgramingMinCoinCombin {
         for(int i = 0; i < list.size();i++){
             outCoinSquence.add(list.get(i));
         }
+        System.out.println("最后转移状态"+lastTransValue);
         return list.get(money);
     }
 
