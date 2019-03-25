@@ -1,5 +1,6 @@
 package com.danebrown.lentcode;
 
+import java.util.Arrays;
 import java.util.PriorityQueue;
 
 /**
@@ -8,13 +9,13 @@ import java.util.PriorityQueue;
  * 这里有 n 门不同的在线课程，他们按从 1 到 n 编号。
  * 每一门课程有一定的持续上课时间（课程时间）t 以及关闭时间第 d 天。
  * 一门课要持续学习 t 天直到第 d 天时要完成，你将会从第 1 天开始。
- *
+ * <p>
  * 给出 n 个在线课程用 (t, d) 对表示。你的任务是找出最多可以修几门课。
- *
- *
- *
+ * <p>
+ * <p>
+ * <p>
  * 示例：
- *
+ * <p>
  * 输入: [[100, 200], [200, 1300], [1000, 1250], [2000, 3200]]
  * 输出: 3
  * 解释:
@@ -26,18 +27,29 @@ import java.util.PriorityQueue;
  **/
 public class scheduleCourse3 {
     public int scheduleCourse(int[][] courses) {
+        Arrays.sort(courses, (a, b) -> Integer.compare(a[1], b[1]));
         //正序，持续时间最短的，在上面.放在前面表示的是持续时间
-        PriorityQueue<int[]> pqEndure = new PriorityQueue<>((a,b)->(a[0]-b[0]));
+        PriorityQueue<Integer> pqEndure = new PriorityQueue<>((a, b) -> Integer.compare(b,a));
         //正序，结束时间早的在前面，结束时间晚的在后面
-        PriorityQueue<int[]> pqClose = new PriorityQueue<>((a,b)->(a[0]-b[0]));
+//        PriorityQueue<int[]> pqClose = new PriorityQueue<>((a,b)->(a[1]-b[1]));
         int count = 0;
         int currentDay;
-        for(int i=0; i < courses.length; i++){
-            int[] c =courses[i];
-            pqEndure.offer(c);
+        for (int i = 0; i < courses.length; i++) {
+            pqEndure.offer(courses[i][0]);
+            count += courses[i][0];
+            if (count > courses[i][1]) {
+                count -= pqEndure.poll();
+            }
         }
-        return count;
+        return pqEndure.size();
 
 
+    }
+
+    public static void main(String[] args){
+        scheduleCourse3 course3 = new scheduleCourse3();
+        int[][] course = {{5,5},{4,6},{2,6}};
+        int ct =  course3.scheduleCourse(course);
+        System.out.println(ct);
     }
 }
