@@ -29,16 +29,16 @@ public class scheduleCourse3 {
     public int scheduleCourse(int[][] courses) {
         Arrays.sort(courses, (a, b) -> Integer.compare(a[1], b[1]));
         //正序，持续时间最短的，在上面.放在前面表示的是持续时间
-        PriorityQueue<Integer> pqEndure = new PriorityQueue<>((a, b) -> Integer.compare(b,a));
+        PriorityQueue<int[]> pqEndure = new PriorityQueue<>((a, b) -> Integer.compare(b[0],a[0]));
         //正序，结束时间早的在前面，结束时间晚的在后面
 //        PriorityQueue<int[]> pqClose = new PriorityQueue<>((a,b)->(a[1]-b[1]));
         int count = 0;
         int currentDay;
         for (int i = 0; i < courses.length; i++) {
-            pqEndure.offer(courses[i][0]);
+            pqEndure.offer(courses[i]);
             count += courses[i][0];
             if (count > courses[i][1]) {
-                count -= pqEndure.poll();
+                count -= pqEndure.poll()[0];
             }
         }
         return pqEndure.size();
