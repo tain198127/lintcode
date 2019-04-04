@@ -40,7 +40,7 @@ public class ShortestSubarray {
     List<Integer> son =new ArrayList<>();
     List<Integer> grandson = new ArrayList<>();
     int level = 1;
-    public int shortestSubarray1(int[] A, int K) {
+    public int shortestSubarray_myversion(int[] A, int K) {
         current = new ArrayList<>(A.length);
         //初始化
         for(int i = 0; i < A.length;i++){
@@ -108,7 +108,7 @@ public class ShortestSubarray {
         ShortestSubarray shortestSubarray = new ShortestSubarray();
         int[] A = {48,99,37,4,-31};
         int K = 140;
-        int rst = shortestSubarray.shortestSubarray1(A,K);
+        int rst = shortestSubarray.shortestSubarray_myversion(A,K);
         System.out.println(rst);
     }
 
