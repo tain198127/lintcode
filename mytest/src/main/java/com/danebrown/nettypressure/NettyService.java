@@ -15,17 +15,17 @@ import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.util.CharsetUtil;
 import io.netty.util.concurrent.GlobalEventExecutor;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.log4j.Log4j2;
+
 
 import java.util.Date;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.UnderstandConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import static io.netty.handler.codec.http.HttpUtil.isKeepAlive;
-
+@Log4j2
 public class NettyService  {
-    public static final Logger logger= LogManager.getLogger(LogManager.ROOT_LOGGER_NAME);
+//    public static final Logger logger= LogManager.getLogger(NettyService.class.getName());
     private void init(){
 
         NioEventLoopGroup boss=new NioEventLoopGroup();
@@ -36,15 +36,15 @@ public class NettyService  {
             bootstrap.channel(NioServerSocketChannel.class);
             bootstrap.childHandler(new NioWebSocketChannelInitializer());
             Channel channel = bootstrap.bind(8081).sync().channel();
-            System.out.println("webSocket服务器启动成功："+channel);
+            log.info("webSocket服务器启动成功："+channel);
             channel.closeFuture().sync();
         } catch (InterruptedException e) {
             e.printStackTrace();
-            System.out.println("运行出错："+e);
+            log.info("运行出错："+e);
         }finally {
             boss.shutdownGracefully();
             work.shutdownGracefully();
-            System.out.println("websocket服务器已关闭");
+            log.info("websocket服务器已关闭");
         }
     }
     public static void main(String[] args){
@@ -70,6 +70,7 @@ public class NettyService  {
 
         @Override
         protected void channelRead0(ChannelHandlerContext ctx, Object msg) {
+            log.info("收到消息："+msg);
             System.out.println("收到消息："+msg);
             if (msg instanceof FullHttpRequest){
                 //以http请求形式接入，但是走的是websocket
@@ -83,14 +84,14 @@ public class NettyService  {
         @Override
         public void channelActive(ChannelHandlerContext ctx) {
             //添加连接
-            System.out.println("客户端加入连接："+ctx.channel());
+            log.info("客户端加入连接："+ctx.channel());
             ChannelSupervise.addChannel(ctx.channel());
         }
 
         @Override
         public void channelInactive(ChannelHandlerContext ctx) {
             //断开连接
-            System.out.println("客户端断开连接："+ctx.channel());
+            log.info("客户端断开连接："+ctx.channel());
             ChannelSupervise.removeChannel(ctx.channel());
         }
 
@@ -169,7 +170,7 @@ public class NettyService  {
 
     public static class ChannelSupervise {
         private   static ChannelGroup GlobalGroup=new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
-        private  static ConcurrentMap<String, ChannelId> ChannelMap=new ConcurrentHashMap<>();
+        private  static ConcurrentMap<String, ChannelId> ChannelMap=new UnderstandConcurrentHashMap<>();
         private   static void addChannel(Channel channel){
             GlobalGroup.add(channel);
             ChannelMap.put(channel.id().asShortText(),channel.id());
