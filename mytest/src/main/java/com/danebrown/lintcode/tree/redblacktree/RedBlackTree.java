@@ -18,7 +18,7 @@ package com.danebrown.lintcode.tree.redblacktree;
 
 import java.util.Comparator;
 import java.util.TreeMap;
-import java.util.concurrent.UnderstandConcurrentHashMap;
+//import java.util.concurrent.UnderstandConcurrentHashMap;
 
 /**
  * Created by DaneBrown on 27/04/2018.
@@ -26,7 +26,7 @@ import java.util.concurrent.UnderstandConcurrentHashMap;
  * All Right Reserved
  */
 public final class RedBlackTree<K extends Comparator, V> {
-    private ThreadLocal<K, V> chm;
+    private ThreadLocal<K> chm;
     private TreeMap<K,V> tm;
     private volatile RBNode<K, V> root = null;
     //修改了多少次
