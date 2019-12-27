@@ -1,4 +1,4 @@
-package com.danebrown.ml;
+package com.danebrown.ml.decisiontree;
 
 import lombok.extern.log4j.Log4j2;
 
