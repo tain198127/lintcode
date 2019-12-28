@@ -145,10 +145,14 @@ public class Logistic {
         log.debug("test size is :{}",test.size());
 
         BigDecimal errorCount =new BigDecimal(0);
+        long start = System.currentTimeMillis();
         for(int i = 0;i< times; i++){
             errorCount = errorCount.add(test(trainData,test));
 
         }
+        long end = System.currentTimeMillis();
+        long span = end-start;
+        log.info("进行 {} 实验总耗时{} ，平均每次耗时{}", times, span, (double)(span/times));
         return errorCount.divide(new BigDecimal(times) , 8, BigDecimal.ROUND_HALF_UP);
 
     }
