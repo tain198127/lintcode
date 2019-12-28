@@ -16,7 +16,6 @@
  */
 package com.danebrown.lintcode.tree.redblacktree;
 
-import javax.xml.soap.Node;
 
 /**
  * Created by DaneBrown on 27/04/2018.
