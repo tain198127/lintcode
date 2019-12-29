@@ -116,7 +116,7 @@ public class Logistic {
 
     public Double classfy(LogisticDataSet<Double> dataset, List<Double> trainWeight) throws Exception {
         if (dataset.getData().size() != trainWeight.size()) {
-            throw new Exception("检车集合与向量集合长度不符");
+            throw new Exception("检测集合与向量集合长度不符");
         }
         double x = 0d;
         for (int i = 0; i < dataset.getData().size(); i++) {
