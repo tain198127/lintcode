@@ -148,6 +148,7 @@ public class Logistic {
     }
 
     public BigDecimal multi_test(int times) throws FileNotFoundException {
+        //读信息
         List<LogisticDataSet<Double>> trainData = Logistic.readData(this.getClass().getResource("/horseColicTraining.txt").getPath());
         log.debug(trainData.size());
 
