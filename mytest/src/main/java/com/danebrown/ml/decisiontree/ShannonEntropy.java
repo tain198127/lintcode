@@ -29,13 +29,16 @@ public class ShannonEntropy {
 
             labelCount.put(item, labelCount.get(item) + 1.0);
 
-        });
+        });//先计算有多少种种类；每个种类中有多少个数量
         double result = 0.0;
         for (Map.Entry<String, Double> entry : labelCount.entrySet()) {
             String type = entry.getKey();
             Double count = entry.getValue();
             log.debug("{} count is {}", type, count);
+            //数量=此类别的总数
+            //概率=数量/总数
             Double prob = (count / len);
+            // 信息熵=概率*log(开方(概率))
             result -= prob * (Math.log(prob) / Math.log(2));
 
         }
