@@ -31,6 +31,8 @@ public class NewtonsMethod {
 
             double seedHat = task.invoke(x0);//原函数
             double seedGradHat = task.grad(x0);//一阶导数
+            //gap = x-[f(x)/f'(x)]
+            //当gap与x值之间足够小时，就已经找到了那个值
             seed = x0 - (seedHat/seedGradHat);
             log.debug("原函数是:{},一阶导数是:{},牛顿值是:{},gaps:{}",seedHat, seedGradHat,seed,Math.abs(seed-x0));
             i++;
