@@ -5,9 +5,15 @@ import com.danebrown.lab.raft.SimpleRaft;
 import com.danebrown.lab.raft.log.RaftCurrentLog;
 import com.danebrown.lab.raft.rpc.RaftRpcReq;
 import com.danebrown.lab.raft.rpc.RaftRpcResp;
+import lombok.extern.slf4j.Slf4j;
 
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.net.URI;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
@@ -17,30 +23,38 @@ import java.util.concurrent.TimeUnit;
  * Created by danebrown on 2020/7/18
  * mail: tain198127@163.com
  */
+@Slf4j
 public abstract class BaseSimpleRaftImpl implements SimpleRaft {
-    private volatile RaftRole currentRole = RaftRole.FOLLOWER;
-    private volatile RaftCurrentLog currentLog = null;
+    /**
+     * 当前角色
+     */
+    volatile RaftRole currentRole = RaftRole.FOLLOWER;
+    /**
+     * 当前日志
+     */
+    volatile RaftCurrentLog currentLog = new RaftCurrentLog();
     /**
      * 启动等待时间
      */
-    private volatile long randomStartupWaitMs = 3000;
+    volatile long randomStartupWaitMs = 3000;
     /**
      * 轮询等待时间
      */
-    private volatile long randomWaitPeriodMs = 3000;
+    volatile long randomWaitPeriodMs = 3000;
     /**
      * 是否被其他请求，要求作为FOLLOWER
      */
-    private volatile boolean isBeFucked = false;
+    volatile boolean isBeFucked = false;
     /**
      * 响应超时时间
      */
-    private volatile long timeOutMs = 3000;
+    volatile long timeOutMs = 3000;
 
-    private volatile long isStartup = 0;
+    volatile long isStartup = 0;
 
-    private volatile List<URI> allNodes;
-    private List<OnRoleChanged> roleChangedListeners = new ArrayList<>();
+    volatile List<URI> allNodes;
+    List<OnRoleChanged> roleChangedListeners = new ArrayList<>();
+    String currentNodeName;
 
     public void registerRoleChangedListener(OnRoleChanged onRoleChanged) {
         roleChangedListeners.add(onRoleChanged);
@@ -57,12 +71,14 @@ public abstract class BaseSimpleRaftImpl implements SimpleRaft {
         //获取一个随机数，用于避免系统同时请求，导致雪崩
         randomStartupWaitMs = this.generateRandomMSPeriod();
         randomWaitPeriodMs = this.generateRandomMSPeriod();
-        currentLog = new RaftCurrentLog();
+        currentNodeName = this.getCurrentNodeName();
         currentLog.setCurrentTerm(0);
+        currentLog.setVoteFor(currentNodeName);
+        currentLog.setVoteCount(0);
+
         //TODO 这里要修改
         //获取所有节点
         allNodes = this.getAllMergedNodes();
-
 
         Executors.newScheduledThreadPool(1).scheduleAtFixedRate(new Runnable() {
             @Override
@@ -117,6 +133,9 @@ public abstract class BaseSimpleRaftImpl implements SimpleRaft {
         }
         RaftRpcReq req = new RaftRpcReq();
 
+        req.setTerm(currentLog.getCurrentTerm());
+        req.setLeaderId(this.currentNodeName);
+
         List<RaftRpcResp> raftRpcResps = leaderElect(req);
 
         long succCt = raftRpcResps.stream().filter(RaftRpcResp::isSuccess).count();
@@ -165,7 +184,11 @@ public abstract class BaseSimpleRaftImpl implements SimpleRaft {
         }
     }
 
-    abstract void leaderSendHeartBeat();
+    private void leaderSendHeartBeat() {
+        List<URI> uris = this.getAllMergedNodes();
+        RaftRpcReq heartBeatRpcReq = new RaftRpcReq();
+        this.heartbeat(heartBeatRpcReq);
+    }
 
 
     /**
@@ -201,6 +224,24 @@ public abstract class BaseSimpleRaftImpl implements SimpleRaft {
     @Override
     public long generateRandomMSPeriod() {
         return ThreadLocalRandom.current().nextInt(2000, 8000);
+    }
+
+    /**
+     * 获取当前节点名称
+     *
+     * @return
+     */
+    String getCurrentNodeName() {
+        try {
+            byte[] mac = NetworkInterface.getByInetAddress(InetAddress.getLocalHost()).getHardwareAddress();
+            String defaultMacString = Base64.getEncoder().encodeToString(mac);
+            return defaultMacString;
+
+
+        } catch (SocketException | UnknownHostException e) {
+            log.error("getCurrentNodeName error:{}", e);
+        }
+        return String.valueOf(ThreadLocalRandom.current().nextInt());
     }
 
 
