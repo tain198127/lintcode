@@ -7,7 +7,6 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import java.util.HashSet;
-import java.util.concurrent.ThreadLocalRandom;
 
 import static org.joda.time.format.DateTimeFormat.forPattern;
 
@@ -34,13 +33,13 @@ public class SnowFlakeUtils {
      */
     private static final int SEQ_LEN = 6;
 
-    private static DateTimeFormatter dataFormat = DateTimeFormat.forPattern("yyyyMMddHHmmssSSS");
-    private static String str = dataFormat.print(DateTime.now());
+//    private static DateTimeFormatter dataFormat = DateTimeFormat.forPattern("yyyyMMddHHmmssSSS");
+//    private static String str = dataFormat.print(DateTime.now());
 
     /**
      * 起始时间
      */
-    private static final long START_TIME =  Long.parseLong(str);;
+    private static final long START_TIME =  1420041600000L;
     /**
      * 剩余时间
      */
@@ -48,13 +47,13 @@ public class SnowFlakeUtils {
     /**
      * 数据中心ID，0-31之间
      */
-    private static final String DATA_ID = getDataId();
+    private static final long DATA_ID = getDataId();
 
 
     /**
      * 机器ID（0-31之间）
      */
-    private static final String WORK_ID = getWorkId();
+    private static final long WORK_ID = getWorkId();
 
 
     /**
@@ -100,9 +99,9 @@ public class SnowFlakeUtils {
      *
      * @return
      */
-    private static String getDataId() {
+    private static long getDataId() {
 
-        return String.format("%02d", 2);
+        return 31;
     }
 
     /**
@@ -110,21 +109,21 @@ public class SnowFlakeUtils {
      *
      * @return
      */
-    private static String getWorkId() {
-        return String.format("%07d",1);
+    private static long getWorkId() {
+        return 0;
     }
 
-    public synchronized static String genID() {
-        DateTimeFormatter dataFormat = DateTimeFormat.forPattern("yyyyMMddHHmmssSSS");
-        String str = dataFormat.print(DateTime.now());
+    public static long genID() {
+//        DateTimeFormatter dataFormat = DateTimeFormat.forPattern("yyyyMMddHHmmssSSS");
+//        String str = dataFormat.print(DateTime.now());
 
-        long now = Long.parseLong(str);
+//        long now = Long.parseLong(str);
+        long now = System.currentTimeMillis();
         /**
          * 发生时钟回拨
          */
         if (now < LAST_TIME_STAMP) {
             //重新计算WORKID
-            LAST_SEQ = (LAST_SEQ + 1) & SEQ_MAX_NUM;
         }
         //同一毫秒内的请求
         if (now == LAST_TIME_STAMP) {
@@ -133,24 +132,24 @@ public class SnowFlakeUtils {
             LAST_SEQ=0;
         }
         LAST_TIME_STAMP=now;
-        StringBuffer stringBuilder = new StringBuffer();
-        stringBuilder.append(now);
-        stringBuilder.append(DATA_ID);
-        stringBuilder.append(WORK_ID);
-        stringBuilder.append(LAST_SEQ);
-     return   stringBuilder.toString();
-//        return ((now-START_TIME)<<TIME_LEFT_BIT)|(DATA_ID<<DATA_LEFT_BIT)|(WORK_ID<<WORK_LEFT_BIT)|LAST_SEQ;
+//        StringBuilder stringBuilder = new StringBuilder();
+//        stringBuilder.append(now);
+//        stringBuilder.append(DATA_ID);
+//        stringBuilder.append(WORK_ID);
+//        stringBuilder.append(LAST_SEQ);
+//     return   Long.parseLong(stringBuilder.toString());
+        return ((now-START_TIME)<<TIME_LEFT_BIT)|(DATA_ID<<DATA_LEFT_BIT)|(WORK_ID<<WORK_LEFT_BIT)|LAST_SEQ;
     }
 
     public static void main(String[] args) {
-        HashSet<String> ids = new HashSet<>();
+        HashSet<Long> ids = new HashSet<>();
         long start=System.nanoTime();
-//        for(int i =0;i<1000;i++) {
-//            ids.add(SnowFlakeUtils.genID());
-//        }
+        for(int i =0;i<3000;i++) {
+            ids.add(SnowFlakeUtils.genID());
+        }
         System.out.println(SnowFlakeUtils.genID());
         long end = System.nanoTime();
-        System.out.println(String.format("共生成%d条，耗时:%d微秒",ids.size(),(end-start)/(1000)));
+        System.out.println(String.format("共生成%d条，耗时:%d毫秒",ids.size(),(end-start)/(1000*1000)));
     }
 
 }
