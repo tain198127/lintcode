@@ -1,11 +1,16 @@
 package com.danebrown.snowflake;
 
+import org.apache.commons.lang3.time.CalendarUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeField;
 import org.joda.time.Instant;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+import org.threeten.bp.DateTimeUtils;
 
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashSet;
 
 import static org.joda.time.format.DateTimeFormat.forPattern;
@@ -17,45 +22,48 @@ import static org.joda.time.format.DateTimeFormat.forPattern;
 public class SnowFlakeUtils {
 
     /**
-     * 时间长度
+     * 时间byte长度
      */
-    private static final int TIME_LEN = 17;
+    private static final int TIME_LEN = 41;
     /**
      * 数据长度
      */
-    private static final int DATA_LEN = 7;
+    private static final int DATA_LEN = 5;
     /**
      * worker id长度
      */
-    private static final int WORK_LEN = 7;
+    private static final int WORK_LEN = 5;
     /**
      * 序号长度
      */
-    private static final int SEQ_LEN = 6;
+    private static final int SEQ_LEN = 12;
 
 //    private static DateTimeFormatter dataFormat = DateTimeFormat.forPattern("yyyyMMddHHmmssSSS");
 //    private static String str = dataFormat.print(DateTime.now());
 
     /**
-     * 起始时间
+     * 起始时间1981-12-27
      */
-    private static final long START_TIME =  1420041600000L;
+    private static final long START_TIME = 380908800000L;
+//    static{
+//
+//        GregorianCalendar gregorianCalendar = new GregorianCalendar(1981,12,27);
+//        System.out.println(gregorianCalendar.getTimeInMillis());
+//
+//
+//    }
     /**
-     * 剩余时间
+     * 时间部分向左移动位数
      */
     private static final int TIME_LEFT_BIT = 61 - 1 - TIME_LEN;
     /**
      * 数据中心ID，0-31之间
      */
     private static final long DATA_ID = getDataId();
-
-
     /**
      * 机器ID（0-31之间）
      */
     private static final long WORK_ID = getWorkId();
-
-
     /**
      * 数据中心最大值31
      */
@@ -80,7 +88,6 @@ public class SnowFlakeUtils {
      * 机器ID左移位数，12
      */
     private static final int WORK_LEFT_BIT = DATA_LEFT_BIT - WORK_LEN;
-
     /**
      * 毫秒内最大序列值 4095
      */
@@ -110,7 +117,7 @@ public class SnowFlakeUtils {
      * @return
      */
     private static long getWorkId() {
-        return 0;
+        return 18;
     }
 
     public static long genID() {
@@ -129,6 +136,7 @@ public class SnowFlakeUtils {
         if (now == LAST_TIME_STAMP) {
             LAST_SEQ = (LAST_SEQ + 1) & SEQ_MAX_NUM;
         }else{
+            //时间不同则序号重置
             LAST_SEQ=0;
         }
         LAST_TIME_STAMP=now;
@@ -138,15 +146,20 @@ public class SnowFlakeUtils {
 //        stringBuilder.append(WORK_ID);
 //        stringBuilder.append(LAST_SEQ);
 //     return   Long.parseLong(stringBuilder.toString());
+        /**
+         * 当前时间-起始时间在 左移（61-1-时间长度）
+         *
+         */
+//
         return ((now-START_TIME)<<TIME_LEFT_BIT)|(DATA_ID<<DATA_LEFT_BIT)|(WORK_ID<<WORK_LEFT_BIT)|LAST_SEQ;
     }
 
     public static void main(String[] args) {
         HashSet<Long> ids = new HashSet<>();
         long start=System.nanoTime();
-        for(int i =0;i<3000;i++) {
-            ids.add(SnowFlakeUtils.genID());
-        }
+//        for(int i =0;i<3000000;i++) {
+//            ids.add(SnowFlakeUtils.genID());
+//        }
         System.out.println(SnowFlakeUtils.genID());
         long end = System.nanoTime();
         System.out.println(String.format("共生成%d条，耗时:%d毫秒",ids.size(),(end-start)/(1000*1000)));
