@@ -1,19 +1,12 @@
 package com.danebrown.snowflake;
 
-import org.apache.commons.lang3.time.CalendarUtils;
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeField;
-import org.joda.time.Instant;
-import org.joda.time.format.DateTimeFormat;
-import org.joda.time.format.DateTimeFormatter;
-import org.threeten.bp.DateTimeUtils;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
+import com.google.common.base.Strings;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashSet;
-
-import static org.joda.time.format.DateTimeFormat.forPattern;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by danebrown on 2020/7/28
@@ -92,6 +85,13 @@ public class SnowFlakeUtils {
      * 毫秒内最大序列值 4095
      */
     private static final long SEQ_MAX_NUM = ~(-1 << SEQ_LEN);
+    private static final byte ldus = ('L');
+    private static final byte cdus = ('C');
+    private static final byte gdus = ('G');
+    private static final byte bdus = ('B');
+    private static final byte idch = ('H');
+    private static final byte idcy = ('Y');
+    private static final byte idcf = ('F');
     /**
      * 上一毫秒内的序列值
      */
@@ -135,11 +135,11 @@ public class SnowFlakeUtils {
         //同一毫秒内的请求
         if (now == LAST_TIME_STAMP) {
             LAST_SEQ = (LAST_SEQ + 1) & SEQ_MAX_NUM;
-        }else{
+        } else {
             //时间不同则序号重置
-            LAST_SEQ=0;
+            LAST_SEQ = 0;
         }
-        LAST_TIME_STAMP=now;
+        LAST_TIME_STAMP = now;
 //        StringBuilder stringBuilder = new StringBuilder();
 //        stringBuilder.append(now);
 //        stringBuilder.append(DATA_ID);
@@ -151,18 +151,76 @@ public class SnowFlakeUtils {
          *
          */
 //
-        return ((now-START_TIME)<<TIME_LEFT_BIT)|(DATA_ID<<DATA_LEFT_BIT)|(WORK_ID<<WORK_LEFT_BIT)|LAST_SEQ;
+        return ((now - START_TIME) << TIME_LEFT_BIT) | (DATA_ID << DATA_LEFT_BIT) | (WORK_ID << WORK_LEFT_BIT) | LAST_SEQ;
     }
+
+    public static int getIDByString(String mixDusStr) {
+        Stopwatch stopwatch = Stopwatch.createStarted();
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(mixDusStr));
+        Preconditions.checkArgument(mixDusStr.length() == 5);
+        stopwatch.stop();
+        System.out.println("check:" + stopwatch.elapsed(TimeUnit.NANOSECONDS) + "纳秒");
+        stopwatch.start();
+
+        char[] mixDusChars = mixDusStr.toUpperCase().toCharArray();
+        byte dusType = (byte) mixDusChars[0];
+        byte idcNum = (byte) mixDusChars[4];
+        int dusId = Integer.parseInt(mixDusStr.substring(1, 4));
+        stopwatch.stop();
+        System.out.println("parseInt:" + stopwatch.elapsed(TimeUnit.NANOSECONDS) + "纳秒");
+        stopwatch.start();
+        int checkIsCorrectDusType = (dusType - ldus) & (dusType - cdus) & (dusType - gdus) & (dusType - bdus);
+        int checkIsCorrectIdcType = (idcNum - idcf) & (idcNum - idch) & (idcNum - idcy);
+
+        Preconditions.checkArgument(checkIsCorrectDusType + checkIsCorrectIdcType == 0, "错误的类型");
+        System.out.println("checkArgument:" + stopwatch.elapsed(TimeUnit.NANOSECONDS) + "纳秒");
+
+        int compondResult = (dusType % 7) * 10000 + dusId * 10 + (idcNum + 1) % 4;
+        System.out.println("计算:" + stopwatch.elapsed(TimeUnit.NANOSECONDS) + "纳秒");
+
+        stopwatch.stop();
+        System.out.println(stopwatch.elapsed(TimeUnit.NANOSECONDS) + "纳秒");
+        return compondResult;
+
+    }
+
 
     public static void main(String[] args) {
         HashSet<Long> ids = new HashSet<>();
-        long start=System.nanoTime();
+        long start = System.nanoTime();
+        int realId = getIDByString("B001H");
+        Set<String> dusType = new HashSet<>();
+        dusType.add("B");
+        dusType.add("L");
+        dusType.add("G");
+        dusType.add("C");
+        dusType.add("b");
+        dusType.add("l");
+        dusType.add("g");
+        dusType.add("c");
+        Set<String> idc = new HashSet<>();
+        idc.add("H");
+        idc.add("Y");
+        idc.add("F");
+        idc.add("h");
+        idc.add("y");
+        idc.add("f");
+        for (String dus : dusType) {
+            for (String dc : idc) {
+                String dusanddc = String.format("%s%s%s", dus, "010", dc);
+                int num = getIDByString(dusanddc);
+                System.out.println(dusanddc + "-->" + num);
+            }
+        }
+//        System.out.println(realId);
+
+
 //        for(int i =0;i<3000000;i++) {
 //            ids.add(SnowFlakeUtils.genID());
 //        }
         System.out.println(SnowFlakeUtils.genID());
         long end = System.nanoTime();
-        System.out.println(String.format("共生成%d条，耗时:%d毫秒",ids.size(),(end-start)/(1000*1000)));
+        System.out.println(String.format("共生成%d条，耗时:%d毫秒", ids.size(), (end - start) / (1000 * 1000)));
     }
 
 }
