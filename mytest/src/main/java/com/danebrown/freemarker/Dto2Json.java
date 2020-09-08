@@ -28,15 +28,18 @@ import java.util.concurrent.TimeUnit;
  */
 @Log4j2
 public class Dto2Json {
-    private static Template tpls;
+//    private static Template tpls;
     Configuration cfg = new Configuration();
 
     public Dto2Json() throws IOException {
         cfg.setDefaultEncoding("UTF-8");
 
         cfg.setClassForTemplateLoading(this.getClass(), "/");
+        cfg.setTemplateUpdateDelayMilliseconds(65535);
 
-        tpls = cfg.getTemplate("freemaker.ftl");
+//        tpls = cfg.getTemplate("freemaker.ftl");
+//        tpls.setAutoFlush(false);
+
 
     }
 
@@ -101,7 +104,7 @@ public class Dto2Json {
         ObjectMapper oMapper = new ObjectMapper();
         Map objMap = oMapper.convertValue(testFtl, Map.class);
         objMap.put("_Sign_", new MacSign());
-        String msg = this.Obj2Json(objMap, tpls);
+        String msg = this.Obj2Json(objMap, cfg.getTemplate("freemaker.ftl"));
 //        log.info("{}",msg);
     }
     private void test(int times) throws IOException, TemplateException {
@@ -181,7 +184,7 @@ public class Dto2Json {
         innerMap.forEach(mp -> {
             String testTargetJson = null;
             try {
-                testTargetJson = this.Obj2Json(mp, tpls);
+                testTargetJson = this.Obj2Json(mp, cfg.getTemplate("freemaker.ftl"));
             } catch (IOException | TemplateException e) {
                 log.error("{}", e.getMessage());
             }
@@ -193,11 +196,12 @@ public class Dto2Json {
         log.info("本次共执行{}条，总时间{}毫秒，平均每条耗时{}毫秒", innerMap.size(), stopwatch.elapsed(TimeUnit.MILLISECONDS), ((float) stopwatch.elapsed(TimeUnit.MILLISECONDS) / innerMap.size()));
     }
     public static void main(String[] args) throws IOException, TemplateException {
+
         Dto2Json dto2Json = new Dto2Json();
-        dto2Json.test(10);
-        dto2Json.test(10);
-        dto2Json.test(10);
-        dto2Json.test(10);
+        dto2Json.test(100);
+        dto2Json.test(100);
+//        dto2Json.test(10);
+//        dto2Json.test(10);
 
     }
 
