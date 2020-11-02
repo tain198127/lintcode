@@ -59,6 +59,7 @@ public class BasicSentinel {
     public static void main(String[] args) throws BlockException {
         BasicSentinel basicSentinel = new BasicSentinel();
         BasicSentinel.initFlowRules();
+        net.sf.ehcache.CacheManager cacheManager;
         for(int t = 0; t < 1; t++){
             int i = ThreadLocalRandom.current().nextInt(1,10000);
             Entry entry = null;

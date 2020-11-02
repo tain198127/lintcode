@@ -30,13 +30,15 @@ import java.util.concurrent.TimeUnit;
 public class Dto2Json {
 //    private static Template tpls;
     Configuration cfg = new Configuration();
+    Map<String,String> testMap = new HashMap<>();
 
     public Dto2Json() throws IOException {
         cfg.setDefaultEncoding("UTF-8");
 
         cfg.setClassForTemplateLoading(this.getClass(), "/");
         cfg.setTemplateUpdateDelayMilliseconds(65535);
-
+        testMap.put("test1","1");
+        testMap.put("test2","2");
 //        tpls = cfg.getTemplate("freemaker.ftl");
 //        tpls.setAutoFlush(false);
 
@@ -69,6 +71,7 @@ public class Dto2Json {
                 .size(String.valueOf(ThreadLocalRandom.current().nextInt(10, 10000)))
                 .user(innerUser)
                 .paper(paper)
+                .testMap(testMap)
                 .SEND_BANK(bigData + ThreadLocalRandom.current().nextInt())
                 .ACCOUNT(bigData + ThreadLocalRandom.current().nextInt())
                 .BUSI_CODE(bigData + ThreadLocalRandom.current().nextInt())
@@ -152,6 +155,7 @@ public class Dto2Json {
                     .RET_EXPLAIN(bigData + ThreadLocalRandom.current().nextInt())
                     .SEQNO(bigData + ThreadLocalRandom.current().nextInt())
                     .size1(bigData + ThreadLocalRandom.current().nextInt())
+                    .testMap(testMap)
                     .TRADEFLAG(bigData + ThreadLocalRandom.current().nextInt())
                     .TRADEFLAG1(bigData + ThreadLocalRandom.current().nextInt())
                     .TRADEFLAG2(bigData + ThreadLocalRandom.current().nextInt())
@@ -185,6 +189,7 @@ public class Dto2Json {
             String testTargetJson = null;
             try {
                 testTargetJson = this.Obj2Json(mp, cfg.getTemplate("freemaker.ftl"));
+                log.info("{}",testTargetJson);
             } catch (IOException | TemplateException e) {
                 log.error("{}", e.getMessage());
             }
@@ -256,6 +261,7 @@ public class Dto2Json {
         private String TRADEFLAG18;
         private String TRADEFLAG19;
         private String TRADEFLAG20;
+        private Map<String,String> testMap;
 
         private InnerTestFtl user;
         private List<InnerTestFtl> paper;
