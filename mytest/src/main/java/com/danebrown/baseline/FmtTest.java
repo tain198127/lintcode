@@ -3,6 +3,7 @@ package com.danebrown.baseline;
 import com.google.common.base.Stopwatch;
 import com.google.common.base.Ticker;
 
+import java.text.MessageFormat;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -34,6 +35,8 @@ public class FmtTest {
         }
         spend = stopwatch.elapsed(TimeUnit.MILLISECONDS);
         System.out.println(j+1+"次字符串相加总耗时："+spend+";平均耗时："+(double)spend/(j+1));
+
+        MessageFormat.format("","111");
         System.out.println("结论：string的format比字符串相加要慢20倍");
     }
 
