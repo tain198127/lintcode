@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Created by danebrown on 2020/9/8
+ * 为证明java的String.format函数效率很低，而做的测试方法
  * mail: tain198127@163.com
  */
 public class FmtTest {
