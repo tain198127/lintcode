@@ -14,12 +14,19 @@ import java.util.stream.Collectors;
 /**
  * Created by danebrown on 2021/2/1
  * mail: tain198127@163.com
- *
+ * 中心极限定理，验证方法如下：
+ * Step1: 生成P个随机数，放入initRandomList
+ * Step2: 从initRandomList中挑选M个样本，然后计算样本的均值，将样本均值（点值）放入result列表
+ * Step3: 重复Step2 N次，将形成一个N个元素的列表 result
+ * Step4: 计算Step3输出的result 的均值 means，和方差 var
+ * Step5: 计算initRandomList的均值 means1和方差var1
+ * step6: 比较means和means1，以及var*N(样本均值空间的大小) 和var1
+ * Step7: 会发现可以通过局部推算整体的均值和方差
  * @author danebrown
  */
 @Slf4j
 public class CentralLimitTheorem {
-    private List<Double> integerList = new ArrayList<>();
+    private List<Double> initRandomList = new ArrayList<>();
 
     private CentralLimitTheorem() {
 
@@ -27,16 +34,16 @@ public class CentralLimitTheorem {
 
     public CentralLimitTheorem(int size) {
         for (int i = 0; i < size; i++) {
-            integerList.add((double) ThreadLocalRandom.current().nextInt(0, size));
+            initRandomList.add((double) ThreadLocalRandom.current().nextInt(0, size));
         }
     }
 
     public static void main(String[] args) {
         CentralLimitTheorem centralLimitTheorem = new CentralLimitTheorem(100000);
 
-        Double means = centralLimitTheorem.means(centralLimitTheorem.integerList);
+        Double means = centralLimitTheorem.means(centralLimitTheorem.initRandomList);
 
-        Double var = centralLimitTheorem.var(centralLimitTheorem.integerList);
+        Double var = centralLimitTheorem.var(centralLimitTheorem.initRandomList);
 
         List<Double> sample = centralLimitTheorem.sampling(10000, 1000);
 
@@ -64,8 +71,8 @@ public class CentralLimitTheorem {
         for (int i = 0; i < times; i++) {
             List<Double> samplePerTimes = new ArrayList<>(size);
             for (int j = 0; j < size; j++) {
-                Integer idx = ThreadLocalRandom.current().nextInt(0, integerList.size());
-                samplePerTimes.add(integerList.get(idx));
+                Integer idx = ThreadLocalRandom.current().nextInt(0, initRandomList.size());
+                samplePerTimes.add(initRandomList.get(idx));
             }
             //每完成一次，将结果求均值，放入result
 
