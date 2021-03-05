@@ -40,19 +40,20 @@ public class CentralLimitTheorem {
 
     public static void main(String[] args) {
         CentralLimitTheorem centralLimitTheorem = new CentralLimitTheorem(100000);
-
+        //均值对数器
         Double means = centralLimitTheorem.means(centralLimitTheorem.initRandomList);
-
+        //方差对数器
         Double var = centralLimitTheorem.var(centralLimitTheorem.initRandomList);
-
+        //中心基线定理算法
         List<Double> sample = centralLimitTheorem.sampling(10000, 1000);
-
+        //排序
         List<Double> sortedSample = sample.stream().sorted().collect(Collectors.toList());
         log.info("结果:{}", sortedSample);
+        //样本均值
         Double sampleMeans = centralLimitTheorem.means(sample);
-
+        //样本方差
         Double sampleVar = centralLimitTheorem.var(sample) * 1000;
-        log.info("整体均值:{}，整体方差:{}", means, var);
+        log.info("对数器的整体均值:{}，整体方差:{}", means, var);
 
         log.info("样本均值:{}，样本方差:{}", sampleMeans, sampleVar);
         //        log.info("整体均值:{}",sampleMeans);
@@ -86,11 +87,21 @@ public class CentralLimitTheorem {
         return result;
     }
 
+    /**
+     * 求均值
+     * @param list
+     * @return
+     */
     public Double means(List<Double> list) {
         OptionalDouble average = Arrays.stream(Doubles.toArray(list)).average();
         return average.getAsDouble();
     }
 
+    /**
+     * 求方差
+     * @param list
+     * @return
+     */
     public Double var(List<Double> list) {
         Double mean = means(list);
         Optional<Double> optionalDouble = list.stream().map(o1 -> {
