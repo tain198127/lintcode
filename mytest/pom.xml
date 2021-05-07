@@ -221,8 +221,15 @@
         <dependency>
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-core</artifactId>
-            <version>3.3.0.RELEASE</version>
+            <version>3.4.4</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/io.projectreactor.netty/reactor-netty -->
+        <dependency>
+            <groupId>io.projectreactor.netty</groupId>
+            <artifactId>reactor-netty</artifactId>
+            <version>1.0.5</version>
+        </dependency>
+
         <!--sentinel begin-->
         <dependency>
             <groupId>com.alibaba.csp</groupId>
@@ -246,6 +253,11 @@
         </dependency>
         <!--sentinel end-->
 
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>3.15.8</version>
+        </dependency>
         <dependency>
             <groupId>net.sf.ehcache</groupId>
             <artifactId>ehcache</artifactId>

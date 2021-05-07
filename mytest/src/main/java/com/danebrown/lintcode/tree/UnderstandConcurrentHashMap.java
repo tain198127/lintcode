@@ -872,10 +872,10 @@
 //    public UnderstandConcurrentHashMap(int initialCapacity) {
 //        if (initialCapacity < 0)
 //            throw new IllegalArgumentException();
-//        int cap = ((initialCapacity >= (MAXIMUM_CAPACITY >>> 1)) ?
+//        int com.danebrown.cap = ((initialCapacity >= (MAXIMUM_CAPACITY >>> 1)) ?
 //                MAXIMUM_CAPACITY :
 //                tableSizeFor(initialCapacity + (initialCapacity >>> 1) + 1));
-//        this.sizeCtl = cap;
+//        this.sizeCtl = com.danebrown.cap;
 //    }
 //
 //    /**
@@ -932,9 +932,9 @@
 //        if (initialCapacity < concurrencyLevel)   // Use at least as many bins
 //            initialCapacity = concurrencyLevel;   // as estimated threads
 //        long size = (long)(1.0 + (long)initialCapacity / loadFactor);
-//        int cap = (size >= (long)MAXIMUM_CAPACITY) ?
+//        int com.danebrown.cap = (size >= (long)MAXIMUM_CAPACITY) ?
 //                MAXIMUM_CAPACITY : tableSizeFor((int)size);
-//        this.sizeCtl = cap;
+//        this.sizeCtl = com.danebrown.cap;
 //    }
 //
 //    // Original (since JDK1.2) Map methods

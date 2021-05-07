@@ -1,0 +1,40 @@
+syntax="proto3";
+
+package raft;
+option java_package = "com.danebrown.cap.cp.easyraft.proto";
+option java_outer_classname = "RaftProto";
+
+enum ResCode {
+    RES_CODE_SUCCESS = 0;
+    RES_CODE_FAIL = 1;
+    RES_CODE_NOT_LEADER = 2;
+}
+
+enum EntryType {
+    ENTRY_TYPE_DATA = 0;
+    ENTRY_TYPE_CONFIGURATION= 1;
+};
+service Greeter {
+    // Sends a greeting
+    rpc SayHello (HelloRequest) returns (HelloReply) {}
+}
+// The request message containing the user's name.
+message HelloRequest {
+     string name = 1;
+}
+
+// The response message containing the greetings
+message HelloReply {
+     string message = 1;
+}
+message Endpoint {
+     string host = 1;
+     uint32 port = 2;
+}
+
+
+message Server {
+     uint32 server_id = 1;
+     Endpoint endpoint = 2;
+}
+
