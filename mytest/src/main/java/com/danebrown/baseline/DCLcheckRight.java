@@ -3,6 +3,7 @@ package com.danebrown.baseline;
 
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadLocalRandom;
@@ -16,6 +17,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @Log4j2
 public class DCLcheckRight {
     private volatile static DCLcheckRight instance;
+    @Autowired
     private long rdm;
 
     private DCLcheckRight() {
