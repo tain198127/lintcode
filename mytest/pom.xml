@@ -27,12 +27,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
-<!--            <version>2.3.3.RELEASE</version>-->
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-autoconfigure</artifactId>
-<!--            <version>2.3.3.RELEASE</version>-->
         </dependency>
 <!--        <dependency>-->
 <!--            <groupId>com.alibaba.spring.boot</groupId>-->
@@ -65,12 +63,12 @@
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
-            <version>2.0.2</version>
+<!--            <version>2.0.2</version>-->
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
-            <version>2.0.2</version>
+<!--            <version>2.0.2</version>-->
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>

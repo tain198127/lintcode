@@ -2,8 +2,12 @@ package com.danebrown.reactor;
 
 import com.google.common.base.Strings;
 import io.netty.util.concurrent.FastThreadLocalThread;
+import lombok.extern.log4j.Log4j2;
 import lombok.extern.slf4j.Slf4j;
 import org.reactivestreams.Subscription;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
@@ -42,8 +46,9 @@ import java.util.function.Supplier;
  *
  * @author danebrown
  */
-@Slf4j
-public class ReactorOneByOne {
+@Log4j2
+@SpringBootApplication
+public class ReactorOneByOne implements CommandLineRunner {
     /**
      * Backpressure 是在数据流从上游生产者向下游消费者传输的过程中，
      *         上游生产速度大于下游消费速度，导致下游的 Buffer 溢出，
@@ -67,15 +72,13 @@ public class ReactorOneByOne {
 
     public static void main(String[] args) throws InvocationTargetException, IllegalAccessException {
         Hooks.onOperatorDebug();
+        Hooks.enableContextLossTracking();
+        SpringApplication.run(ReactorOneByOne.class, args);
+    }
+    @Override
+    public void run(String... args) throws Exception {
         ReactorOneByOne reactorOneByOne = new ReactorOneByOne();
         reactorOneByOne.init();
-        //        reactorOneByOne.range();
-        //        ReactorOneByOne.compluxSubscribe();
-        //        ReactorOneByOne.generateTest();
-        //        ReactorOneByOne.createTest();
-        //        ReactorOneByOne.handleTest();
-        //        ReactorOneByOne.publicOnTest();
-        //        System.in.read();
     }
 
     /**
@@ -87,7 +90,8 @@ public class ReactorOneByOne {
     @ConsoleMenu(order = 1, name = "range", desc = "测试range方法")
     public void range() {
         Flux<Integer> range = Flux.range(1, 3).log("range").checkpoint("range");
-        range.subscribe(i -> System.out.println(i));
+        log.warn("上一步其实已经调用Flux.range创建了一个序列");
+        range.subscribe(i -> log.info("调用lesubscribe:{}",i));
     }
 
     @ConsoleMenu(order = 2, name = "compluxSubscribe", desc = "测试subscribe")
@@ -100,24 +104,25 @@ public class ReactorOneByOne {
                 return integer;
             else
                 throw new RuntimeException("数组错误");
-        });
+        }).checkpoint();
+        log.warn("在做了range以后，马上调用了一次Map");
         range.subscribe(new Consumer<Integer>() {
             //正常consumer
             @Override
             public void accept(Integer integer) {
-                System.out.println(integer);
+                log.info("{}",integer);
             }
         }, new Consumer<Throwable>() {
             //处理异常数据consumer
             @Override
             public void accept(Throwable throwable) {
-                System.err.println(throwable.getMessage());
+                log.error(throwable.getMessage());
             }
         }, new Runnable() {
             //处理完成的consumer
             @Override
             public void run() {
-                System.err.println("处理完毕");
+                log.trace("处理完毕");
             }
         });
     }
@@ -269,30 +274,19 @@ public class ReactorOneByOne {
                             return Mono.just(finalI);
                         })                        .checkpoint("defer" +
                         "-checkpoint")
-
-
-
                         .publishOn(Schedulers.newParallel("测试"))
                         .checkpoint("publishOn-checkpoint")
                         .log()
-
-
                         .checkpoint("doOnNext-checkpoint")
-
-
                         .doOnError(throwable -> log.error("命中错误:{}", throwable))
                         .checkpoint("doOnError-checkpoint")
-
                         .doOnSuccess(integer -> {
                             log.info("success:{}", integer);
                             countDownLatch.countDown();
                         })
                         .checkpoint("doOnSuccess-checkpoint")
-
-//                        .checkpoint("timeout-checkpoint")
                         .doOnSubscribe(subscription ->
                         {
-
                             log.info("doOnSubscribe:{}",subscription);
                         })
                         .doOnNext(integer -> {
@@ -311,26 +305,14 @@ public class ReactorOneByOne {
                             log.info("next:{}",integer);
                         })
                         .timeout(Duration.ofMillis(10))
-//                .onErrorStop()
-
-
                         .doFinally(signalType -> log.info("结束:{}", signalType))
-//                        .onErrorStop()
-
                         .subscribe(integer -> {
                             try {
-
-
                                 log.info("打印结果" + integer);
-        //                        FastThreadLocalThread.sleep(5000);
-        //                        timeout.await(10, TimeUnit.MILLISECONDS);
-
                             } catch (Exception e) {
-
                                 e.printStackTrace();
                             } finally {
                                 log.info("subscribe 结束");
-        //                        lock.unlock();
                             }
                 });
             });
@@ -341,6 +323,10 @@ public class ReactorOneByOne {
             e.printStackTrace();
         }
 
+
+    }
+    @ConsoleMenu(order = 8, name = "deferTest", desc = "defer的测试")
+    public void deferTest(){
 
     }
 
@@ -378,5 +364,6 @@ public class ReactorOneByOne {
 
 
     }
+
 
 }
