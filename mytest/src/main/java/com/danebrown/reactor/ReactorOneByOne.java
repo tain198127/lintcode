@@ -1,17 +1,14 @@
 package com.danebrown.reactor;
 
 import com.google.common.base.Strings;
-import io.netty.util.concurrent.FastThreadLocalThread;
 import lombok.extern.log4j.Log4j2;
-import lombok.extern.slf4j.Slf4j;
-import org.reactivestreams.Subscription;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.apache.catalina.core.ApplicationContext;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringApplicationRunListener;
+import org.springframework.stereotype.Component;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
-import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.SynchronousSink;
 import reactor.core.scheduler.Schedulers;
@@ -47,39 +44,56 @@ import java.util.function.Supplier;
  * @author danebrown
  */
 @Log4j2
-@SpringBootApplication
-public class ReactorOneByOne implements CommandLineRunner {
+@Component
+public class ReactorOneByOne {
+
+    public void starting() {
+
+            Thread thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        init();
+                    } catch (InvocationTargetException | IllegalAccessException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            },"ReactorOneByOneMainThread");
+            thread.start();
+    }
+
     /**
      * Backpressure 是在数据流从上游生产者向下游消费者传输的过程中，
-     *         上游生产速度大于下游消费速度，导致下游的 Buffer 溢出，
-     *         这种现象就叫做 Backpressure 。
-     *         Backpressure 这个概念源自工程概念中的
-     *         Backpressure：在管道运输中，气流或液流由于管道突然变细、
-     *         急弯等原因导致由某处出现了下游向上游的逆向压力，
-     *         这种情况称作「back pressure」。
-     *         这是一个很直观的词：向后的、往回的压力——back pressure。
-     *         重点在【BUFFER溢出】
-     *
+     * 上游生产速度大于下游消费速度，导致下游的 Buffer 溢出，
+     * 这种现象就叫做 Backpressure 。
+     * Backpressure 这个概念源自工程概念中的
+     * Backpressure：在管道运输中，气流或液流由于管道突然变细、
+     * 急弯等原因导致由某处出现了下游向上游的逆向压力，
+     * 这种情况称作「back pressure」。
+     * 这是一个很直观的词：向后的、往回的压力——back pressure。
+     * 重点在【BUFFER溢出】
+     * <p>
      * 在spring的reactor中， backpressure表示消费者能够反向告知生产者生产内容的速度的能力
-     *
      */
 
-    /**
-     * 问题
-     *
-     * @param args
-     */
 
-    public static void main(String[] args) throws InvocationTargetException, IllegalAccessException {
-        Hooks.onOperatorDebug();
-        Hooks.enableContextLossTracking();
-        SpringApplication.run(ReactorOneByOne.class, args);
-    }
-    @Override
-    public void run(String... args) throws Exception {
-        ReactorOneByOne reactorOneByOne = new ReactorOneByOne();
-        reactorOneByOne.init();
-    }
+    //    @Override
+//    public void run(String... args) throws Exception {
+//        Thread thread = new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                ReactorOneByOne reactorOneByOne = new ReactorOneByOne();
+//                try {
+//                    reactorOneByOne.init();
+//                } catch (IllegalAccessException | InvocationTargetException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }, "ReactorOneByOneMainThread");
+//        thread.start();
+//
+//    }
 
     /**
      * 为什么要用reactor
@@ -87,11 +101,48 @@ public class ReactorOneByOne implements CommandLineRunner {
      * 因为如果使用callback，那么如果出现在callback里面的callback里面的callback....就很容形成套娃。
      * 使用future的话，如果需要进行编排的话，依旧非常复杂
      */
+
+    public void init() throws InvocationTargetException, IllegalAccessException {
+        Scanner scan = new Scanner(System.in);
+        while (true) {
+            Method[] methods = this.getClass().getMethods();
+            Map<ConsoleMenu, Method> consoleMenuList = new HashMap<>();
+            Arrays.stream(methods).forEach(method -> {
+                ConsoleMenu consoleMenu = method.getAnnotation(ConsoleMenu.class);
+                if (consoleMenu != null) {
+                    consoleMenuList.put(consoleMenu, method);
+                }
+            });
+            consoleMenuList.keySet().stream().sorted(Comparator.comparingInt(ConsoleMenu::order)).forEach(consoleMenu -> {
+                System.out.println(String.format("%d : %s [%s]", consoleMenu.order(), consoleMenu.name(), consoleMenu.desc()));
+            });
+
+
+            if (scan.hasNextLine()) {
+                int i = Integer.parseInt(scan.nextLine());
+                if (i == 0) {
+                    System.out.println("停机退出");
+                    break;
+                }
+                Optional<ConsoleMenu> optionalConsoleMenu = consoleMenuList.keySet().stream().filter(item -> item.order() == i).findFirst();
+                if (optionalConsoleMenu.isPresent()) {
+                    ConsoleMenu consoleMenu = optionalConsoleMenu.get();
+                    Method method = consoleMenuList.get(consoleMenu);
+                    method.invoke(this);
+                }
+
+            }
+        }
+        scan.close();
+        System.exit(0);
+
+
+    }
     @ConsoleMenu(order = 1, name = "range", desc = "测试range方法")
     public void range() {
         Flux<Integer> range = Flux.range(1, 3).log("range").checkpoint("range");
         log.warn("上一步其实已经调用Flux.range创建了一个序列");
-        range.subscribe(i -> log.info("调用lesubscribe:{}",i));
+        range.subscribe(i -> log.info("调用lesubscribe:{}", i));
     }
 
     @ConsoleMenu(order = 2, name = "compluxSubscribe", desc = "测试subscribe")
@@ -110,7 +161,7 @@ public class ReactorOneByOne implements CommandLineRunner {
             //正常consumer
             @Override
             public void accept(Integer integer) {
-                log.info("{}",integer);
+                log.info("{}", integer);
             }
         }, new Consumer<Throwable>() {
             //处理异常数据consumer
@@ -136,6 +187,7 @@ public class ReactorOneByOne implements CommandLineRunner {
             @Override
             public AtomicInteger call() throws Exception {
                 //初始状态
+                log.info("这里做了初始化");
                 return new AtomicInteger();
             }
         }, new BiFunction<AtomicInteger, SynchronousSink<String>, AtomicInteger>() {
@@ -152,9 +204,10 @@ public class ReactorOneByOne implements CommandLineRunner {
             //结束状态的consumer
             @Override
             public void accept(AtomicInteger integer) {
-                System.out.println("complete state is :" + integer.get());
+                log.info("complete state is :" + integer.get());
             }
         });
+        log.info("上面做了generate的初始化，实际generate和结束状态的consumer");
         //消费
         flux.subscribe(new Consumer<String>() {
             @Override
@@ -272,48 +325,32 @@ public class ReactorOneByOne implements CommandLineRunner {
                         .defer((Supplier<Mono<?>>) () -> {
                             log.info("fromCallable:{}", finalI);
                             return Mono.just(finalI);
-                        })                        .checkpoint("defer" +
-                        "-checkpoint")
-                        .publishOn(Schedulers.newParallel("测试"))
-                        .checkpoint("publishOn-checkpoint")
-                        .log()
-                        .checkpoint("doOnNext-checkpoint")
-                        .doOnError(throwable -> log.error("命中错误:{}", throwable))
-                        .checkpoint("doOnError-checkpoint")
-                        .doOnSuccess(integer -> {
-                            log.info("success:{}", integer);
-                            countDownLatch.countDown();
-                        })
-                        .checkpoint("doOnSuccess-checkpoint")
-                        .doOnSubscribe(subscription ->
-                        {
-                            log.info("doOnSubscribe:{}",subscription);
-                        })
-                        .doOnNext(integer -> {
-                            lock.lock();
+                        }).checkpoint("defer" + "-checkpoint").publishOn(Schedulers.newParallel("测试")).checkpoint("publishOn-checkpoint").log().checkpoint("doOnNext-checkpoint").doOnError(throwable -> log.error("命中错误:{}", throwable)).checkpoint("doOnError-checkpoint").doOnSuccess(integer -> {
+                    log.info("success:{}", integer);
+                    countDownLatch.countDown();
+                }).checkpoint("doOnSuccess-checkpoint").doOnSubscribe(subscription -> {
+                    log.info("doOnSubscribe:{}", subscription);
+                }).doOnNext(integer -> {
+                    lock.lock();
 
-                            try {
-                                timeout.await(200, TimeUnit.MILLISECONDS);
-                            } catch (InterruptedException e) {
+                    try {
+                        timeout.await(200, TimeUnit.MILLISECONDS);
+                    } catch (InterruptedException e) {
 
-                                log.error("被人家弄得中断了呢",new RuntimeException(e));
-                                //                        e.printStackTrace();
-                            }
-                            finally {
-                                lock.unlock();
-                            }
-                            log.info("next:{}",integer);
-                        })
-                        .timeout(Duration.ofMillis(10))
-                        .doFinally(signalType -> log.info("结束:{}", signalType))
-                        .subscribe(integer -> {
-                            try {
-                                log.info("打印结果" + integer);
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            } finally {
-                                log.info("subscribe 结束");
-                            }
+                        log.error("被人家弄得中断了呢", new RuntimeException(e));
+                        //                        e.printStackTrace();
+                    } finally {
+                        lock.unlock();
+                    }
+                    log.info("next:{}", integer);
+                }).timeout(Duration.ofMillis(10)).doFinally(signalType -> log.info("结束:{}", signalType)).subscribe(integer -> {
+                    try {
+                        log.info("打印结果" + integer);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    } finally {
+                        log.info("subscribe 结束");
+                    }
                 });
             });
         }
@@ -325,45 +362,13 @@ public class ReactorOneByOne implements CommandLineRunner {
 
 
     }
+
     @ConsoleMenu(order = 8, name = "deferTest", desc = "defer的测试")
-    public void deferTest(){
+    public void deferTest() {
 
     }
 
-    public void init() throws InvocationTargetException, IllegalAccessException {
-        Scanner scan = new Scanner(System.in);
-        while (true) {
-            Method[] methods = this.getClass().getMethods();
-            Map<ConsoleMenu, Method> consoleMenuList = new HashMap<>();
-            Arrays.stream(methods).forEach(method -> {
-                ConsoleMenu consoleMenu = method.getAnnotation(ConsoleMenu.class);
-                if (consoleMenu != null) {
-                    consoleMenuList.put(consoleMenu, method);
-                }
-            });
-            consoleMenuList.keySet().stream().sorted(Comparator.comparingInt(ConsoleMenu::order)).forEach(consoleMenu -> {
-                System.out.println(String.format("%d : %s [%s]", consoleMenu.order(), consoleMenu.name(), consoleMenu.desc()));
-            });
 
-
-            if (scan.hasNextLine()) {
-                int i = Integer.parseInt(scan.nextLine());
-                if (i == 0) {
-                    break;
-                }
-                Optional<ConsoleMenu> optionalConsoleMenu = consoleMenuList.keySet().stream().filter(item -> item.order() == i).findFirst();
-                if (optionalConsoleMenu.isPresent()) {
-                    ConsoleMenu consoleMenu = optionalConsoleMenu.get();
-                    Method method = consoleMenuList.get(consoleMenu);
-                    method.invoke(this);
-                }
-
-            }
-        }
-        scan.close();
-
-
-    }
 
 
 }

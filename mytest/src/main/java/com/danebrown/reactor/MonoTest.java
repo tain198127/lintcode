@@ -4,6 +4,7 @@ import com.danebrown.reactor.dto.Employer;
 import com.danebrown.reactor.dto.User;
 import lombok.Data;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import java.nio.charset.CharacterCodingException;
@@ -20,6 +21,7 @@ import java.util.concurrent.TimeoutException;
  */
 @Log4j2
 @Data
+@Component
 public class MonoTest {
     public static void main(String[] args) throws InterruptedException, ExecutionException, TimeoutException {
         MonoTest monoTest = new MonoTest();
