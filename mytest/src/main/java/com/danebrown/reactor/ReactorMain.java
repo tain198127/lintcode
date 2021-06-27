@@ -6,6 +6,8 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.SpringApplicationRunListener;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.ConfigurableEnvironment;
 import reactor.core.publisher.Hooks;
@@ -18,7 +20,7 @@ import reactor.core.publisher.Hooks;
  */
 @SpringBootApplication
 @Log4j2
-public class ReactorMain implements CommandLineRunner, SpringApplicationRunListener {
+public class ReactorMain implements CommandLineRunner, ApplicationListener<ApplicationEvent> {
     @Autowired
     ReactorOneByOne reactorOneByOne;
 
@@ -34,4 +36,9 @@ public class ReactorMain implements CommandLineRunner, SpringApplicationRunListe
     }
 
 
+    @Override
+    public void onApplicationEvent(ApplicationEvent event) {
+        log.warn("接收所有类型事件{}-->事件源:{}",event.getClass().getSimpleName(),
+                event.getSource().getClass().getSimpleName());
+    }
 }
