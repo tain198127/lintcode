@@ -1,6 +1,7 @@
 package com.danebrown.reactor;
 
 import com.google.common.base.Strings;
+import io.netty.util.concurrent.FastThreadLocalThread;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.Aware;
@@ -64,13 +65,13 @@ import java.util.function.Supplier;
  * @author danebrown
  */
 @Log4j2
-//@Component
 public class ReactorOneByOne implements ApplicationListener<ApplicationReadyEvent> {
     @Autowired
     ThreadPoolTaskExecutor taskExecutor;
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
         log.warn("ApplicationReadyEvent");
+        this.starting();
     }
     @PostConstruct
     public void postConstruct(){
@@ -94,8 +95,9 @@ public class ReactorOneByOne implements ApplicationListener<ApplicationReadyEven
     public void starting() {
         taskExecutor.execute(()-> {
             try {
+                FastThreadLocalThread.sleep(3000);
                 init();
-            } catch (InvocationTargetException | IllegalAccessException e) {
+            } catch (InvocationTargetException | IllegalAccessException | InterruptedException e) {
                 e.printStackTrace();
             }
         });
