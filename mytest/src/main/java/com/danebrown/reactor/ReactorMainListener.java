@@ -36,37 +36,38 @@ public class ReactorMainListener implements SpringApplicationRunListener
     }
     @Override
     public void starting() {
-        log.warn("ReactorMain-->starting");
+        log.warn("SpringApplicationRunListener->ReactorMainListener" +
+                "-->starting");
     }
 
     @Override
     public void environmentPrepared(ConfigurableEnvironment environment) {
-        log.warn("ReactorMain-->environmentPrepared");
+        log.warn("SpringApplicationRunListener->ReactorMainListener-->environmentPrepared");
     }
 
     @Override
     public void contextPrepared(ConfigurableApplicationContext context) {
-        log.warn("ReactorMain-->contextPrepared");
+        log.warn("SpringApplicationRunListener->ReactorMainListener-->contextPrepared");
     }
 
     @Override
     public void contextLoaded(ConfigurableApplicationContext context) {
-        log.warn("ReactorMain-->contextLoaded");
+        log.warn("SpringApplicationRunListener->ReactorMainListener-->contextLoaded");
     }
 
     @Override
     public void started(ConfigurableApplicationContext context) {
-        log.warn("ReactorMain-->started");
+        log.warn("SpringApplicationRunListener->ReactorMainListener-->started");
     }
 
     @Override
     public void running(ConfigurableApplicationContext context) {
-        log.warn("ReactorMain-->running");
+        log.warn("SpringApplicationRunListener->ReactorMainListener-->running");
     }
 
     @Override
     public void failed(ConfigurableApplicationContext context, Throwable exception) {
-        log.warn("ReactorMain-->failed");
+        log.warn("SpringApplicationRunListener->ReactorMainListener-->failed");
     }
 
 

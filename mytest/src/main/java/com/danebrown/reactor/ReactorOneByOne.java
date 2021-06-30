@@ -2,10 +2,28 @@ package com.danebrown.reactor;
 
 import com.google.common.base.Strings;
 import lombok.extern.log4j.Log4j2;
-import org.apache.catalina.core.ApplicationContext;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.Aware;
+import org.springframework.beans.factory.BeanFactory;
+import org.springframework.beans.factory.BeanFactoryAware;
+import org.springframework.beans.factory.BeanNameAware;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessor;
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.BeanNameGenerator;
 import org.springframework.boot.SpringApplicationRunListener;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.LifecycleProcessor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
@@ -13,6 +31,8 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.SynchronousSink;
 import reactor.core.scheduler.Schedulers;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.Duration;
@@ -44,23 +64,42 @@ import java.util.function.Supplier;
  * @author danebrown
  */
 @Log4j2
-@Component
-public class ReactorOneByOne {
+//@Component
+public class ReactorOneByOne implements ApplicationListener<ApplicationReadyEvent> {
+    @Autowired
+    ThreadPoolTaskExecutor taskExecutor;
+    @Override
+    public void onApplicationEvent(ApplicationReadyEvent event) {
+        this.starting();
+    }
+    @PostConstruct
+    public void postConstruct(){
+        log.warn("postConstruct");
+    }
 
+    public void initMethod(){
+        log.warn("ReactorOneByOne-->initMethod");
+
+    }
+
+    public void destroyMethod(){
+        log.warn("ReactorOneByOne-->destroyMethod");
+
+    }
+    @PreDestroy
+    public void preDestroy(){
+        log.warn("preDestroy");
+
+    }
     public void starting() {
+        taskExecutor.execute(()-> {
+            try {
+                init();
+            } catch (InvocationTargetException | IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        });
 
-            Thread thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        init();
-                    } catch (InvocationTargetException | IllegalAccessException e) {
-                        e.printStackTrace();
-                    }
-
-                }
-            },"ReactorOneByOneMainThread");
-            thread.start();
     }
 
     /**
@@ -77,23 +116,6 @@ public class ReactorOneByOne {
      * 在spring的reactor中， backpressure表示消费者能够反向告知生产者生产内容的速度的能力
      */
 
-
-    //    @Override
-//    public void run(String... args) throws Exception {
-//        Thread thread = new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                ReactorOneByOne reactorOneByOne = new ReactorOneByOne();
-//                try {
-//                    reactorOneByOne.init();
-//                } catch (IllegalAccessException | InvocationTargetException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//        }, "ReactorOneByOneMainThread");
-//        thread.start();
-//
-//    }
 
     /**
      * 为什么要用reactor
@@ -367,7 +389,6 @@ public class ReactorOneByOne {
     public void deferTest() {
 
     }
-
 
 
 

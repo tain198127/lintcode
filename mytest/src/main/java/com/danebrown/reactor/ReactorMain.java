@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.ConfigurableEnvironment;
 import reactor.core.publisher.Hooks;
 
@@ -21,8 +22,7 @@ import reactor.core.publisher.Hooks;
 @SpringBootApplication
 @Log4j2
 public class ReactorMain implements CommandLineRunner, ApplicationListener<ApplicationEvent> {
-    @Autowired
-    ReactorOneByOne reactorOneByOne;
+
 
     public static void main(String[] args) {
         SpringApplication.run(ReactorMain.class, args);
@@ -32,7 +32,6 @@ public class ReactorMain implements CommandLineRunner, ApplicationListener<Appli
     public void run(String... args) throws Exception {
         Hooks.onOperatorDebug();
         Hooks.enableContextLossTracking();
-        reactorOneByOne.starting();
     }
 
 
@@ -40,5 +39,10 @@ public class ReactorMain implements CommandLineRunner, ApplicationListener<Appli
     public void onApplicationEvent(ApplicationEvent event) {
         log.warn("接收所有类型事件{}-->事件源:{}",event.getClass().getSimpleName(),
                 event.getSource().getClass().getSimpleName());
+    }
+
+    @Bean(initMethod = "initMethod", destroyMethod = "destroyMethod")
+    public ReactorOneByOne generateReactorOneByOne(){
+        return new ReactorOneByOne();
     }
 }
