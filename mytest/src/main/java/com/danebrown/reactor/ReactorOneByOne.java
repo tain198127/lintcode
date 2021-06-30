@@ -70,7 +70,7 @@ public class ReactorOneByOne implements ApplicationListener<ApplicationReadyEven
     ThreadPoolTaskExecutor taskExecutor;
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
-        this.starting();
+        log.warn("ApplicationReadyEvent");
     }
     @PostConstruct
     public void postConstruct(){

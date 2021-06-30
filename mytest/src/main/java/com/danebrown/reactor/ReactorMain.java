@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.SpringApplicationRunListener;
+import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
@@ -23,15 +24,22 @@ import reactor.core.publisher.Hooks;
 @Log4j2
 public class ReactorMain implements CommandLineRunner, ApplicationListener<ApplicationEvent> {
 
+    @Autowired
+    ReactorOneByOne reactorOneByOne;
 
     public static void main(String[] args) {
-        SpringApplication.run(ReactorMain.class, args);
+        SpringApplication springApplication =
+                new SpringApplication(ReactorMain.class);
+        springApplication.setWebApplicationType(WebApplicationType.NONE);
+        springApplication.run(ReactorMain.class,
+                args);
     }
 
     @Override
     public void run(String... args) throws Exception {
         Hooks.onOperatorDebug();
         Hooks.enableContextLossTracking();
+        reactorOneByOne.starting();
     }
 
 
