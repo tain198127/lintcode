@@ -1,18 +1,13 @@
 package com.danebrown.reactor;
 
 import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.SpringApplicationRunListener;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
-import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.core.env.ConfigurableEnvironment;
 import reactor.core.publisher.Hooks;
 
 /**
@@ -26,13 +21,10 @@ import reactor.core.publisher.Hooks;
 public class ReactorMain implements CommandLineRunner, ApplicationListener<ApplicationEvent> {
 
 
-
     public static void main(String[] args) {
-        SpringApplication springApplication =
-                new SpringApplication(ReactorMain.class);
+        SpringApplication springApplication = new SpringApplication(ReactorMain.class);
         springApplication.setWebApplicationType(WebApplicationType.REACTIVE);
-        springApplication.run(ReactorMain.class,
-                args);
+        springApplication.run(ReactorMain.class, args);
     }
 
     @Override
@@ -45,12 +37,11 @@ public class ReactorMain implements CommandLineRunner, ApplicationListener<Appli
 
     @Override
     public void onApplicationEvent(ApplicationEvent event) {
-        log.warn("接收所有类型事件{}-->事件源:{}",event.getClass().getSimpleName(),
-                event.getSource().getClass().getSimpleName());
+        log.warn("接收所有类型事件{}-->事件源:{}", event.getClass().getSimpleName(), event.getSource().getClass().getSimpleName());
     }
 
     @Bean(initMethod = "initMethod", destroyMethod = "destroyMethod")
-    public ReactorOneByOne generateReactorOneByOne(){
+    public ReactorOneByOne generateReactorOneByOne() {
         return new ReactorOneByOne();
     }
 }
