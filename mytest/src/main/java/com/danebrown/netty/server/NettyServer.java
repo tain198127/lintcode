@@ -3,6 +3,7 @@ package com.danebrown.netty.server;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
@@ -58,8 +59,27 @@ public class NettyServer implements CommandLineRunner, ApplicationListener<Conte
                 .channel(NioServerSocketChannel.class)
                 .handler(new LoggingHandler(LogLevel.DEBUG))
                 .childHandler(new ChannelInitializer() {
-            @Override
+                    @Override
+                    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+                        log.error("exceptionCaught:ChannelHandlerContext:{};",ctx,cause);
+                        super.exceptionCaught(ctx, cause);
+                    }
+
+                    @Override
+                    public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+                        log.error("handlerAdded:{}",ctx);
+                        super.handlerAdded(ctx);
+                    }
+
+                    @Override
+                    public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+                        log.info("handlerRemoved:{}",ctx);
+                        super.handlerRemoved(ctx);
+                    }
+
+                    @Override
             protected void initChannel(Channel channel) throws Exception {
+                        log.info("initChannel:{}",channel);
                 ChannelPipeline p = channel.pipeline();
 
                 p.addLast(new TestConsoleHandler());
@@ -69,7 +89,9 @@ public class NettyServer implements CommandLineRunner, ApplicationListener<Conte
         ChannelFuture ch = null;
         try {
             ch = serverBootstrap.bind(9999).sync();
+            log.info("bind");
             ch.channel().closeFuture().sync();
+            log.info("closeFuture");
         } catch (InterruptedException e) {
             e.printStackTrace();
             boss.shutdownGracefully();

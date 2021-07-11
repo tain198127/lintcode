@@ -18,7 +18,7 @@ public class TestConsoleHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws UnsupportedEncodingException {
 
-        log.info("channelRead");
+        log.info("channelRead:{};msg:{}",ctx,msg);
         ByteBuf result = (ByteBuf) msg;
         byte[] result1 = new byte[result.readableBytes()];
         // msg中存储的是ByteBuf类型的数据，把数据读取到byte[]中
@@ -42,50 +42,50 @@ public class TestConsoleHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        log.error("error:{}",cause);
+        log.error("error:{}",ctx,cause);
         ctx.close();
         super.exceptionCaught(ctx, cause);
     }
 
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) {
-        log.info("channelReadComplete-->渠道读取完毕");
+        log.info("channelReadComplete-->渠道读取完毕:{}",ctx);
         ctx.flush();
     }
 
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
-        log.info("channelRegistered-->有客户端接入了");
+        log.info("channelRegistered-->有客户端接入了:{}",ctx);
         super.channelRegistered(ctx);
     }
 
     @Override
     public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
-        log.info("channelUnregistered");
+        log.info("channelUnregistered:{}",ctx);
         super.channelUnregistered(ctx);
     }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        log.info("channelActive-->客户端连接成功");
+        log.info("channelActive-->客户端连接成功:{}",ctx);
         super.channelActive(ctx);
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        log.info("channelInactive");
+        log.info("channelInactive:{}",ctx);
         super.channelInactive(ctx);
     }
 
     @Override
     public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-        log.info("userEventTriggered");
+        log.info("userEventTriggered:context:{},env:{}",ctx,evt);
         super.userEventTriggered(ctx, evt);
     }
 
     @Override
     public void channelWritabilityChanged(ChannelHandlerContext ctx) throws Exception {
-        log.info("channelWritabilityChanged");
+        log.info("channelWritabilityChanged:{}",ctx);
         super.channelWritabilityChanged(ctx);
     }
 
@@ -104,14 +104,14 @@ public class TestConsoleHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-        log.info("handlerAdded");
+        log.info("handlerAdded:{}",ctx);
 
         super.handlerAdded(ctx);
     }
 
     @Override
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
-        log.info("handlerRemoved");
+        log.info("handlerRemoved:{}",ctx);
 
         super.handlerRemoved(ctx);
     }
