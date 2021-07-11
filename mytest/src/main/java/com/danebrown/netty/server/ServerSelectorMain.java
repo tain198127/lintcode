@@ -130,6 +130,9 @@ public class ServerSelectorMain {
 
                             // 了，并且注册类型设置为READ。
                             //收到一个是要求accept类型的FD
+                            /**
+                             * 在多线程下面，这个新的SOCKET要注册到哪个selector上呢？
+                             */
                             accept(serverSelectionKey);
                         } else if (serverSelectionKey.isConnectable()) {
                             log.warn("serverSelectionKey.isConnectable:{}", toJson(serverSelectionKey));
@@ -177,6 +180,7 @@ public class ServerSelectorMain {
             表示在FD5(EPFD)里面再加上一个FD7,并且关注的是EPOLLIN这个事件
             //这里读取到accept以后，又注册了一个FD例如FD7，然后把FD7扔回了selector
             此时epoll里面，应该有FD4和FD7，这里体现了多路复用器的精髓
+            但是这个只是单线程的方式
              */
             client.register(selector, SelectionKey.OP_READ, buffer);
             System.out.println("-------------------------------------------");
@@ -192,7 +196,38 @@ public class ServerSelectorMain {
     }
 
     public void read(SelectionKey serverSelectionKey) {
+        //拿到数据
+        ByteBuffer buffer = (ByteBuffer) serverSelectionKey.attachment();
+        //拿到客户端的那个socket
+        SocketChannel client = (SocketChannel) serverSelectionKey.channel();
 
+        buffer.clear();
+        while (true){
+            try {
+                int num = client.read(buffer);
+                if (num >0 ){
+                    //读取
+                    //将buffer翻转一下，表示开始读取
+                    buffer.flip();
+                    while (buffer.hasRemaining()){
+                        client.write(buffer);
+                    }
+                    buffer.clear();
+                }
+                else if(num == 0){
+                    //没有读到东西
+                    break;
+                }
+                else if(num < 0){
+                    //连接断开
+                    System.err.println("连接断开了"+client.getRemoteAddress());
+                    serverSelectionKey.cancel();
+                    break;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public void valid(SelectionKey serverSelectionKey) {
