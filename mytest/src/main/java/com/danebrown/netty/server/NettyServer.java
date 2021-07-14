@@ -55,31 +55,28 @@ public class NettyServer implements CommandLineRunner, ApplicationListener<Conte
     public void run(String... args) {
 
         serverBootstrap = new ServerBootstrap();
-        serverBootstrap.group(boss, workers)
-                .channel(NioServerSocketChannel.class)
-                .handler(new LoggingHandler(LogLevel.DEBUG))
-                .childHandler(new ChannelInitializer() {
-                    @Override
-                    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-                        log.error("exceptionCaught:ChannelHandlerContext:{};",ctx,cause);
-                        super.exceptionCaught(ctx, cause);
-                    }
+        serverBootstrap.group(boss, workers).channel(NioServerSocketChannel.class).handler(new LoggingHandler(LogLevel.DEBUG)).childHandler(new ChannelInitializer() {
+            @Override
+            public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+                log.error("exceptionCaught:ChannelHandlerContext:{};", ctx, cause);
+                super.exceptionCaught(ctx, cause);
+            }
 
-                    @Override
-                    public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-                        log.error("handlerAdded:{}",ctx);
-                        super.handlerAdded(ctx);
-                    }
+            @Override
+            public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+                log.error("handlerAdded:{}", ctx);
+                super.handlerAdded(ctx);
+            }
 
-                    @Override
-                    public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
-                        log.info("handlerRemoved:{}",ctx);
-                        super.handlerRemoved(ctx);
-                    }
+            @Override
+            public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+                log.info("handlerRemoved:{}", ctx);
+                super.handlerRemoved(ctx);
+            }
 
-                    @Override
+            @Override
             protected void initChannel(Channel channel) throws Exception {
-                        log.info("initChannel:{}",channel);
+                log.info("initChannel:{}", channel);
                 ChannelPipeline p = channel.pipeline();
 
                 p.addLast(new TestConsoleHandler());

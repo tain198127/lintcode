@@ -19,6 +19,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
+ * 纯手工写netty
  * Created by danebrown on 2021/7/4
  * mail: tain198127@163.com
  *
