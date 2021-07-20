@@ -1,25 +1,85 @@
-<!--<?xml version="1.0" encoding="UTF-8"?>-->
+<?xml version="1.0" encoding="UTF-8"?>
 
-<!--<Configuration status="WARN">-->
+<Configuration status="WARN" monitorInterval="30">
+    <Properties>
+        <Property name="LOG_HOME" value="./log"/>
+        <Property name="LOG_ARCHIVE_NAME" value="archive"/>
 
-<!--    <Appenders>-->
+    </Properties>
+    <Appenders>
 
-<!--        <Console name="Console" target="SYSTEM_OUT">-->
+        <Console name="Console" target="SYSTEM_OUT">
 
-<!--            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>-->
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
 
-<!--        </Console>-->
+        </Console>
+        <Routing name="route">
+            <Routes pattern="$${ctx:logFileName}">
+                <Route key="AsyncLogProcess" ref="AsyncLogProcess">
+                </Route>
+                <Route key="SyncLogProcess" ref="SyncLogProcess">
+                </Route>
 
-<!--    </Appenders>-->
 
-<!--    <Loggers>-->
+            </Routes>
+        </Routing>
+        <RollingFile name="AsyncLogProcess"
+                                 fileName="${LOG_HOME}/${date:yyyy}/${date:MM}/${date:dd}/AsyncLogProcess/${ctx:logFileName}-info.log"
+                                 filePattern="${LOG_HOME}/${date:yyyy}/%d{MM}/%d{dd}/boy/${LOG_ARCHIVE_NAME}/${ctx:logFileName}-info-%i.log.gz"
+                                 immediateFlush="false">
+            <Filters>
+                <MarkerFilter marker="AsyncLogProcess" onMatch="ACCEPT" onMismatch="DENY"/>
+                <!--如果是error级别拒绝，设置 onMismatch="NEUTRAL" 可以让日志经过后续的过滤器-->
+                <ThresholdFilter level="error" onMatch="DENY" onMismatch="NEUTRAL"/>
+                <!--如果是info\warn输出-->
+                <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="NEUTRAL"/>
+            </Filters>
+            <PatternLayout pattern="%d %p %c{1.} [%t] %m %ex%n"/>
+            <Policies>
+                <!--interval属性用来指定多久滚动一次，根据当前filePattern设置是1天滚动一次-->
+                <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+            </Policies>
+            <!-- DefaultRolloverStrategy属性如不设置，则默认同一文件夹下最多保存7个文件-->
+            <DefaultRolloverStrategy max="15"/>
+        </RollingFile>
 
-<!--        <Root level="TRACE">-->
+        <RollingFile name="SyncLogProcess"
+                                 fileName="${LOG_HOME}/${date:yyyy}/${date:MM}/${date:dd}/SyncLogProcess/${ctx:logFileName}-info.log"
+                                 filePattern="${LOG_HOME}/${date:yyyy}/%d{MM}/%d{dd}/SyncLogProcess/${LOG_ARCHIVE_NAME}/${ctx:logFileName}-info-%i.log.gz"
+                                 immediateFlush="false">
+            <Filters>
+                <MarkerFilter marker="SyncLogProcess" onMatch="ACCEPT" onMismatch="DENY"/>
+                <!--如果是error级别拒绝，设置 onMismatch="NEUTRAL" 可以让日志经过后续的过滤器-->
+                <ThresholdFilter level="error" onMatch="DENY" onMismatch="NEUTRAL"/>
+                <!--如果是info\warn输出-->
+                <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="NEUTRAL"/>
+            </Filters>
+            <PatternLayout pattern="%d %p %c{1.} [%t] %m %ex%n"/>
+            <Policies>
+                <!--interval属性用来指定多久滚动一次，根据当前filePattern设置是1天滚动一次-->
+                <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+            </Policies>
+            <!-- DefaultRolloverStrategy属性如不设置，则默认同一文件夹下最多保存7个文件-->
+            <DefaultRolloverStrategy max="15"/>
+        </RollingFile>
+<!--        <RandomAccessFile name="RandomAccessFile" fileName="async.log" immediateFlush="false" append="false">-->
+<!--            <PatternLayout>-->
+<!--                <Pattern>%d %p %c{1.} [%t] %m %ex%n</Pattern>-->
+<!--            </PatternLayout>-->
+<!--        </RandomAccessFile>-->
+    </Appenders>
 
-<!--            <AppenderRef ref="Console"/>-->
+    <Loggers>
 
-<!--        </Root>-->
+        <AsyncRoot level="TRACE" includeLocation="false">
 
-<!--    </Loggers>-->
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="route"/>
 
-<!--</Configuration>-->
+        </AsyncRoot>
+
+    </Loggers>
+
+</Configuration>
