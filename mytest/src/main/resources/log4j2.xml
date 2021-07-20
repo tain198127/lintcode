@@ -19,6 +19,7 @@
                 </Route>
                 <Route key="SyncLogProcess" ref="SyncLogProcess">
                 </Route>
+                <Route key="JCToolLogProcess" ref="Async"></Route>
 
 
             </Routes>
@@ -26,7 +27,7 @@
         <RollingFile name="AsyncLogProcess"
                                  fileName="${LOG_HOME}/${date:yyyy}/${date:MM}/${date:dd}/AsyncLogProcess/${ctx:logFileName}-info.log"
                                  filePattern="${LOG_HOME}/${date:yyyy}/%d{MM}/%d{dd}/boy/${LOG_ARCHIVE_NAME}/${ctx:logFileName}-info-%i.log.gz"
-                                 immediateFlush="false">
+                                 immediateFlush="true">
             <Filters>
                 <MarkerFilter marker="AsyncLogProcess" onMatch="ACCEPT" onMismatch="DENY"/>
                 <!--如果是error级别拒绝，设置 onMismatch="NEUTRAL" 可以让日志经过后续的过滤器-->
@@ -47,7 +48,7 @@
         <RollingFile name="SyncLogProcess"
                                  fileName="${LOG_HOME}/${date:yyyy}/${date:MM}/${date:dd}/SyncLogProcess/${ctx:logFileName}-info.log"
                                  filePattern="${LOG_HOME}/${date:yyyy}/%d{MM}/%d{dd}/SyncLogProcess/${LOG_ARCHIVE_NAME}/${ctx:logFileName}-info-%i.log.gz"
-                                 immediateFlush="false">
+                                 immediateFlush="true">
             <Filters>
                 <MarkerFilter marker="SyncLogProcess" onMatch="ACCEPT" onMismatch="DENY"/>
                 <!--如果是error级别拒绝，设置 onMismatch="NEUTRAL" 可以让日志经过后续的过滤器-->
@@ -65,16 +66,16 @@
             <DefaultRolloverStrategy max="15"/>
         </RollingFile>
 
-        <RollingFile name="JCToolsBQ"
+        <RollingFile name="JCToolLogProcess"
                      fileName="${LOG_HOME}/${date:yyyy}/${date:MM}/${date:dd}/JCToolsBlockingQueue/JCToolsBlockingQueue-info.log"
                      filePattern="${LOG_HOME}/${date:yyyy}/%d{MM}/%d{dd}/SyncLogProcess/${LOG_ARCHIVE_NAME}/JCToolsBlockingQueue-info-%i.log.gz"
-                     immediateFlush="false">
+                     immediateFlush="true">
             <Filters>
-<!--                <MarkerFilter marker="SyncLogProcess" onMatch="ACCEPT" onMismatch="DENY"/>-->
+                <MarkerFilter marker="JCToolLogProcess" onMatch="ACCEPT" onMismatch="DENY"/>
                 <!--如果是error级别拒绝，设置 onMismatch="NEUTRAL" 可以让日志经过后续的过滤器-->
-<!--                <ThresholdFilter level="error" onMatch="DENY" onMismatch="NEUTRAL"/>-->
+                <ThresholdFilter level="error" onMatch="DENY" onMismatch="NEUTRAL"/>
                 <!--如果是info\warn输出-->
-<!--                <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="NEUTRAL"/>-->
+                <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="NEUTRAL"/>
             </Filters>
             <PatternLayout pattern="%d %p %c{1.} [%t] %m %ex%n"/>
             <Policies>
@@ -86,7 +87,7 @@
             <DefaultRolloverStrategy max="15"/>
         </RollingFile>
         <Async name="Async" bufferSize="262144">
-            <AppenderRef ref="JCToolsBQ"/>
+            <AppenderRef ref="JCToolLogProcess"/>
             <JCToolsBlockingQueue/>
         </Async>
     </Appenders>
@@ -96,8 +97,8 @@
         <AsyncRoot level="TRACE" includeLocation="false">
 
             <AppenderRef ref="Console"/>
-<!--            <AppenderRef ref="route"/>-->
-            <AppenderRef ref="Async"/>
+            <AppenderRef ref="route"/>
+<!--            <AppenderRef ref="Async"/>-->
 
         </AsyncRoot>
 <!--        <AsyncLogger name="com.danebrown.log" level="INFO" additivity="false" includeLocation="false">-->

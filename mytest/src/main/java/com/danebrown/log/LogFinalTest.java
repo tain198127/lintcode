@@ -1,9 +1,6 @@
 package com.danebrown.log;
 
-import lombok.extern.log4j.Log4j2;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Marker;
-import org.slf4j.MarkerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.WebApplicationType;
@@ -26,7 +23,8 @@ public class LogFinalTest implements CommandLineRunner {
     AsyncLogProcess asyncLogProcess;
     @Autowired
     SyncLogProcess syncLogProcess;
-
+    @Autowired
+    JCToolLogProcess jcToolLogProcess;
     @Autowired
     ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
@@ -37,16 +35,22 @@ public class LogFinalTest implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         log.info("ok");
-        CountDownLatch countDownLatch = new CountDownLatch(2);
-        threadPoolTaskExecutor.execute(()->{
+        CountDownLatch countDownLatch = new CountDownLatch(3);
+        threadPoolTaskExecutor.execute(() -> {
             asyncLogProcess.runLog(1);
             asyncLogProcess.runDebugLog(1);
             countDownLatch.countDown();
         });
-        threadPoolTaskExecutor.execute(()->{
+        threadPoolTaskExecutor.execute(() -> {
             syncLogProcess.runLog(1);
             syncLogProcess.runDebugLog(1);
             countDownLatch.countDown();
+        });
+        threadPoolTaskExecutor.execute(() -> {
+            jcToolLogProcess.runLog(1);
+            jcToolLogProcess.runDebugLog(1);
+            countDownLatch.countDown();
+
         });
         countDownLatch.await();
         threadPoolTaskExecutor.destroy();
