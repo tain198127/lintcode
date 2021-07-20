@@ -14,7 +14,7 @@
 
         </Console>
         <Routing name="route">
-            <Routes pattern="$${ctx:logFileName}">
+            <Routes pattern="${ctx:logFileName}">
                 <Route key="AsyncLogProcess" ref="AsyncLogProcess">
                 </Route>
                 <Route key="SyncLogProcess" ref="SyncLogProcess">
@@ -64,11 +64,31 @@
             <!-- DefaultRolloverStrategy属性如不设置，则默认同一文件夹下最多保存7个文件-->
             <DefaultRolloverStrategy max="15"/>
         </RollingFile>
-<!--        <RandomAccessFile name="RandomAccessFile" fileName="async.log" immediateFlush="false" append="false">-->
-<!--            <PatternLayout>-->
-<!--                <Pattern>%d %p %c{1.} [%t] %m %ex%n</Pattern>-->
-<!--            </PatternLayout>-->
-<!--        </RandomAccessFile>-->
+
+        <RollingFile name="JCToolsBQ"
+                     fileName="${LOG_HOME}/${date:yyyy}/${date:MM}/${date:dd}/JCToolsBlockingQueue/JCToolsBlockingQueue-info.log"
+                     filePattern="${LOG_HOME}/${date:yyyy}/%d{MM}/%d{dd}/SyncLogProcess/${LOG_ARCHIVE_NAME}/JCToolsBlockingQueue-info-%i.log.gz"
+                     immediateFlush="false">
+            <Filters>
+<!--                <MarkerFilter marker="SyncLogProcess" onMatch="ACCEPT" onMismatch="DENY"/>-->
+                <!--如果是error级别拒绝，设置 onMismatch="NEUTRAL" 可以让日志经过后续的过滤器-->
+<!--                <ThresholdFilter level="error" onMatch="DENY" onMismatch="NEUTRAL"/>-->
+                <!--如果是info\warn输出-->
+<!--                <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="NEUTRAL"/>-->
+            </Filters>
+            <PatternLayout pattern="%d %p %c{1.} [%t] %m %ex%n"/>
+            <Policies>
+                <!--interval属性用来指定多久滚动一次，根据当前filePattern设置是1天滚动一次-->
+                <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="10 MB"/>
+            </Policies>
+            <!-- DefaultRolloverStrategy属性如不设置，则默认同一文件夹下最多保存7个文件-->
+            <DefaultRolloverStrategy max="15"/>
+        </RollingFile>
+        <Async name="Async" bufferSize="262144">
+            <AppenderRef ref="JCToolsBQ"/>
+            <JCToolsBlockingQueue/>
+        </Async>
     </Appenders>
 
     <Loggers>
@@ -76,9 +96,13 @@
         <AsyncRoot level="TRACE" includeLocation="false">
 
             <AppenderRef ref="Console"/>
-            <AppenderRef ref="route"/>
+<!--            <AppenderRef ref="route"/>-->
+            <AppenderRef ref="Async"/>
 
         </AsyncRoot>
+<!--        <AsyncLogger name="com.danebrown.log" level="INFO" additivity="false" includeLocation="false">-->
+<!--            <AppenderRef ref="Async"></AppenderRef>-->
+<!--        </AsyncLogger>-->
 
     </Loggers>
 
