@@ -9,8 +9,8 @@
     <Appenders>
 
         <Console name="Console" target="SYSTEM_OUT">
-
-            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+<!--            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%15t] %-5level %logger{36}(%F:%L) - %msg%n"/>-->
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%15t] %-5level %-30.30c{.1}(%F:%L) - %msg%n"/>
 
         </Console>
         <Routing name="route">
@@ -94,7 +94,7 @@
 
     <Loggers>
 
-        <AsyncRoot level="TRACE" includeLocation="false">
+        <AsyncRoot level="TRACE" includeLocation="true">
 
             <AppenderRef ref="Console"/>
             <AppenderRef ref="route"/>
