@@ -16,6 +16,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -30,10 +31,15 @@ import java.util.Scanner;
 @SpringBootApplication
 //@Configuration
 @Component
-public class NettyClient implements CommandLineRunner {
+public class NettyClient
+        implements CommandLineRunner
+{
 
     @Autowired
     public TestClientHandler testClientHandler;
+
+
+
 
     @Bean
     public TestClientHandler getClientHandler(){
@@ -41,6 +47,14 @@ public class NettyClient implements CommandLineRunner {
     }
 
     public static void main(String[] args) {
+//        NettyClient client = new NettyClient();
+//        client.threadPoolTaskExecutor = new ThreadPoolTaskExecutor();
+//        client.testClientHandler = new TestClientHandler(client.threadPoolTaskExecutor);
+//        try {
+//            client.run(args);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
         new SpringApplicationBuilder(NettyClient.class).web(WebApplicationType.NONE).run(args);
 
     }

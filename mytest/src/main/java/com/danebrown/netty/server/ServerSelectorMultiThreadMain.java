@@ -1,7 +1,6 @@
 package com.danebrown.netty.server;
 
 import lombok.extern.log4j.Log4j2;
-import org.apache.ibatis.annotations.SelectKey;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -38,11 +37,11 @@ public class ServerSelectorMultiThreadMain {
             mode = Optional.ofNullable(scan.nextInt()).orElse(-1);
         }
 
-        ExecutorService executorService = Executors.newCachedThreadPool();
-        ThreadSelectorGroup boss = new ThreadSelectorGroup(2, executorService
-                , mode);
-        //        ThreadSelectorGroup worker = new ThreadSelectorGroup(3, executorService);
-        //        boss.setGroup(worker);
+        ExecutorService bossexecutorService = Executors.newCachedThreadPool();
+        ExecutorService workerexecutorService = Executors.newCachedThreadPool();
+        ThreadSelectorGroup boss = new ThreadSelectorGroup(2, bossexecutorService, mode);
+        ThreadSelectorGroup worker = new ThreadSelectorGroup(3, workerexecutorService, mode);
+        boss.setGroup(worker);
 
         boss.bind(9999);
         //        boss.bind(8888);
@@ -114,11 +113,9 @@ public class ServerSelectorMultiThreadMain {
                  * 这样就解决了mode1 情况中register放前面也不行，放后面也不行的尴尬境地
                  */
                 next.selector.wakeup();
-                log.info("bind->lbqadd->selector.wakeup() " +
-                        "keysize:{}是让之前阻塞的地方解除阻塞", next.selector.keys().size());
+                log.info("bind->lbqadd->selector.wakeup() " + "keysize:{}是让之前阻塞的地方解除阻塞", next.selector.keys().size());
 
-            }
-            else if(mode == 1){
+            } else if (mode == 1) {
                 //下面是重点
                 if (channel instanceof ServerSocketChannel) {
                     //表明是服务端的，要绑定selector进行register
@@ -160,6 +157,7 @@ public class ServerSelectorMultiThreadMain {
 
         private LinkedBlockingQueue<Channel> lbq = new LinkedBlockingQueue<>();
         private ThreadSelectorGroup group;
+
         public ThreadSelector(ThreadSelectorGroup group) {
             try {
                 this.group = group;
@@ -223,20 +221,16 @@ public class ServerSelectorMultiThreadMain {
                          * 处理一些task
                          * 例如处理处理服务端的register或者客户端的listen
                          */
-                        if(!lbq.isEmpty()){
+                        if (!lbq.isEmpty()) {
                             try {
                                 Channel channel = lbq.take();
-                                if(channel instanceof ServerSocketChannel){
+                                if (channel instanceof ServerSocketChannel) {
                                     ServerSocketChannel server = (ServerSocketChannel) channel;
-                                    server.register(selector,
-                                            SelectionKey.OP_ACCEPT);
-                                }
-                                else if(channel instanceof SocketChannel){
+                                    server.register(selector, SelectionKey.OP_ACCEPT);
+                                } else if (channel instanceof SocketChannel) {
                                     SocketChannel client = (SocketChannel) channel;
                                     //注册一个8192字节的bytebuffer到客户端读取的缓存中
-                                    client.register(selector,
-                                            SelectionKey.OP_READ,
-                                            ByteBuffer.allocateDirect(8192));
+                                    client.register(selector, SelectionKey.OP_READ, ByteBuffer.allocateDirect(8192));
                                 }
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
@@ -277,7 +271,7 @@ public class ServerSelectorMultiThreadMain {
                 try {
                     int num = client.read(buffer);
                     if (num > 0) {
-                        log.info("readHandler->num:{};",num);
+                        log.info("readHandler->num:{};", num);
                         buffer.flip();
                         while (buffer.hasRemaining()) {
                             client.write(buffer);
@@ -314,9 +308,7 @@ public class ServerSelectorMultiThreadMain {
                 //设置为unblocking
                 client.configureBlocking(false);
                 //选择一个selector 并进行注册
-                log.info("acceptHandler->remote:{},local:{}",
-                        client.getRemoteAddress(),
-                        client.getLocalAddress());
+                log.info("acceptHandler->remote:{},local:{}", client.getRemoteAddress(), client.getLocalAddress());
                 /**
                  * 这里相当于把当前这个channel，又扔回到group中进行重新选择了selector了
                  */

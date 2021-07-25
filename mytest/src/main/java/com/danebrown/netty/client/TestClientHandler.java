@@ -20,6 +20,10 @@ import java.util.Scanner;
 public class TestClientHandler extends ChannelInboundHandlerAdapter {
     @Autowired
     ThreadPoolTaskExecutor threadPoolTaskExecutor;
+    @Autowired
+    public TestClientHandler(){
+
+    }
     /**
      * 通道激活时
      * @param ctx
