@@ -38,9 +38,12 @@ public class ServerSelectorMultiThreadMain {
         }
 
         ExecutorService bossexecutorService = Executors.newCachedThreadPool();
+
         ExecutorService workerexecutorService = Executors.newCachedThreadPool();
-        ThreadSelectorGroup boss = new ThreadSelectorGroup(2, bossexecutorService, mode);
-        ThreadSelectorGroup worker = new ThreadSelectorGroup(3, workerexecutorService, mode);
+        ThreadSelectorGroup boss = new ThreadSelectorGroup(2,
+                bossexecutorService, mode,"boss");
+        ThreadSelectorGroup worker = new ThreadSelectorGroup(3,
+                workerexecutorService, mode,"worker");
         boss.setGroup(worker);
 
         boss.bind(9999);
@@ -52,7 +55,7 @@ public class ServerSelectorMultiThreadMain {
 
     public static class ThreadSelectorGroup {
 
-        private ThreadSelectorGroup group;
+        private ThreadSelectorGroup worker = this;
         /**
          * 1:采用wakeup模式
          * 2:采用blockingQuene模式
@@ -61,6 +64,8 @@ public class ServerSelectorMultiThreadMain {
         private ThreadSelector[] selectors;
         private ServerSocketChannel server;
         private AtomicInteger currentIdx = new AtomicInteger(0);
+        private AtomicInteger workerCurrentIdx = new AtomicInteger(0);
+        private String name;
 
         /**
          * 创建的线程数
@@ -68,18 +73,21 @@ public class ServerSelectorMultiThreadMain {
          * @param num
          * @param executorService
          */
-        public ThreadSelectorGroup(int num, ExecutorService executorService, int mode) {
+        public ThreadSelectorGroup(int num, ExecutorService executorService,
+                                   int mode,String name) {
             selectors = new ThreadSelector[num];
             this.mode = mode;
+            this.name = name;
             for (int i = 0; i < num; i++) {
                 selectors[i] = new ThreadSelector(this);
                 //                new Thread(selectors[i]).start();
                 executorService.submit(selectors[i]);
             }
+
         }
 
         public void setGroup(ThreadSelectorGroup group) {
-            this.group = group;
+            this.worker = group;
         }
 
         /**
@@ -92,6 +100,8 @@ public class ServerSelectorMultiThreadMain {
                 server = ServerSocketChannel.open();
                 server.configureBlocking(false);
                 server.bind(new InetSocketAddress((port)));
+                log.info("groupName:{};bind {}",this.name,
+                        server.getLocalAddress());
                 nextSelector(server);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -105,15 +115,35 @@ public class ServerSelectorMultiThreadMain {
          * @param channel
          */
         private void nextSelector(Channel channel) throws ClosedChannelException {
-            ThreadSelector next = next();
+            ThreadSelector next = next(channel);
             if (mode == 2) {
-                next.lbq.add(channel);
-                /**
-                 * 相当于把channel放到队列里面，把信息传递给ThreadSelector线程了，然后再wakeup。
-                 * 这样就解决了mode1 情况中register放前面也不行，放后面也不行的尴尬境地
-                 */
-                next.selector.wakeup();
-                log.info("bind->lbqadd->selector.wakeup() " + "keysize:{}是让之前阻塞的地方解除阻塞", next.selector.keys().size());
+                if(channel instanceof ServerSocketChannel){
+
+                    next.lbq.add(channel);
+                    //改变使用worker组,因为使用了分组，因此如果是服务器的话，需要设定他的worker组
+                    next.setGroup(worker);
+                    /**
+                     * 相当于把channel放到队列里面，把信息传递给ThreadSelector线程了，然后再wakeup。
+                     * 这样就解决了mode1 情况中register放前面也不行，放后面也不行的尴尬境地
+                     */
+                    next.selector.wakeup();
+                    log.info("bind->lbqadd->selector.wakeup() " +
+                                    "keysize:{}是让之前阻塞的地方解除阻塞 groupName:{}",
+                            next.selector.keys().size(),
+                            next.group.name
+                    );
+                }
+                else if(channel instanceof SocketChannel){
+                    //客户端，选出来的next已经是work组中的了，因此无需再次设定group
+                    next.lbq.add(channel);
+                    next.selector.wakeup();
+                    log.info("client bind->lbqadd->selector.wakeup() " +
+                            "keysize:{}是让之前阻塞的地方解除阻塞; groupName:{}",
+                            next.selector.keys().size(),
+                            next.group.name
+                    );
+
+                }
 
             } else if (mode == 1) {
                 //下面是重点
@@ -142,11 +172,20 @@ public class ServerSelectorMultiThreadMain {
             }
         }
 
-        private ThreadSelector next() {
-
-            int xid = this.currentIdx.incrementAndGet() % selectors.length;
-            log.info("xid is :[{}]", xid);
-            return selectors[xid];
+        private ThreadSelector next(Channel channel) {
+            if(channel instanceof ServerSocketChannel){
+                //从boss中选择selector
+                int xid = this.currentIdx.incrementAndGet() % selectors.length;
+                log.info("xid is :[{}],groupName:{}", xid, this.name);
+                return selectors[xid];
+            }
+            else{
+                //从worker中选择selector
+                int xid =
+                        this.workerCurrentIdx.incrementAndGet() % worker.selectors.length;
+                log.info("worker xid is :[{}],groupName:{}", xid,worker.name);
+                return worker.selectors[xid];
+            }
         }
 
     }
@@ -156,6 +195,11 @@ public class ServerSelectorMultiThreadMain {
         private Selector selector = null;
 
         private LinkedBlockingQueue<Channel> lbq = new LinkedBlockingQueue<>();
+
+        public void setGroup(ThreadSelectorGroup group) {
+            this.group = group;
+        }
+
         private ThreadSelectorGroup group;
 
         public ThreadSelector(ThreadSelectorGroup group) {
@@ -174,6 +218,7 @@ public class ServerSelectorMultiThreadMain {
         @Override
         public void run() {
             //如果一个线程一直在死循环，我们称之为loop
+//            Thread.currentThread().setName(this.group.name);
             while (true) {
                 try {
                     /**
@@ -183,9 +228,15 @@ public class ServerSelectorMultiThreadMain {
                      * 在serverSocketSelector做register的时候，可能在这之后执行的，那么可能会导致
                      * 永远无法注册上
                      */
-                    log.info("Selector.select before;keysize:{}", selector.keys().size());
+                    log.info("Selector.select before;keysize:{};groupName:{}",
+                            selector.keys().size(),
+                            this.group.name);
                     int num = selector.select();
-                    log.info("Selector.selected :num:{};keysize:{}", num, selector.keys().size());
+                    log.info("Selector.selected :num:{};keysize:{};groupName:{}",
+                            num,
+                            selector.keys().size(),
+                            this.group.name
+                    );
 
                     if (num > 0) {
                         /**
@@ -227,10 +278,14 @@ public class ServerSelectorMultiThreadMain {
                                 if (channel instanceof ServerSocketChannel) {
                                     ServerSocketChannel server = (ServerSocketChannel) channel;
                                     server.register(selector, SelectionKey.OP_ACCEPT);
+                                    log.info("server register ,groupName:{}",
+                                            this.group.name);
                                 } else if (channel instanceof SocketChannel) {
                                     SocketChannel client = (SocketChannel) channel;
                                     //注册一个8192字节的bytebuffer到客户端读取的缓存中
                                     client.register(selector, SelectionKey.OP_READ, ByteBuffer.allocateDirect(8192));
+                                    log.info("client register ,groupName:{}",
+                                            this.group.name);
                                 }
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
@@ -271,7 +326,8 @@ public class ServerSelectorMultiThreadMain {
                 try {
                     int num = client.read(buffer);
                     if (num > 0) {
-                        log.info("readHandler->num:{};", num);
+                        log.info("readHandler->num:{}; groupName:{}", num,
+                                this.group.name);
                         buffer.flip();
                         while (buffer.hasRemaining()) {
                             client.write(buffer);
@@ -283,7 +339,8 @@ public class ServerSelectorMultiThreadMain {
                         /**
                          * 客户端断开连接了
                          */
-                        log.info("client {} is close", client.getRemoteAddress());
+                        log.info("client {} is close; groupName:{}",
+                                client.getRemoteAddress(),this.group.name);
                         //这里要注意，一定要cancel，因为连接已经断开了，不需要在关注了
                         key.cancel();
                         break;
@@ -308,7 +365,11 @@ public class ServerSelectorMultiThreadMain {
                 //设置为unblocking
                 client.configureBlocking(false);
                 //选择一个selector 并进行注册
-                log.info("acceptHandler->remote:{},local:{}", client.getRemoteAddress(), client.getLocalAddress());
+                log.info("acceptHandler->remote:{},local:{};groupName:{}",
+                        client.getRemoteAddress(),
+                        client.getLocalAddress(),
+                        this.group.name
+                );
                 /**
                  * 这里相当于把当前这个channel，又扔回到group中进行重新选择了selector了
                  */

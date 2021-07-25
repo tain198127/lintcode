@@ -10,7 +10,7 @@
 
         <Console name="Console" target="SYSTEM_OUT">
 <!--            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%15t] %-5level %logger{36}(%F:%L) - %msg%n"/>-->
-            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%15t] %-5level %-30.30c{.1}(%F:%L)->%M - %msg%n"/>
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%15t] %-5level (%F:%L)->[%-5.30M{.1}] - %msg%n"/>
 
         </Console>
         <Routing name="route">
