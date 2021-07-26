@@ -194,7 +194,12 @@ public class ServerSelectorMultiThreadMain {
 
         private Selector selector = null;
 
-        private LinkedBlockingQueue<Channel> lbq = new LinkedBlockingQueue<>();
+        private LinkedBlockingQueue<Channel> lbq = get();
+
+        @Override
+        protected LinkedBlockingQueue<Channel> initialValue() {
+            return new LinkedBlockingQueue<>();
+        }
 
         public void setGroup(ThreadSelectorGroup group) {
             this.group = group;
