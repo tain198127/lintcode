@@ -2,30 +2,20 @@ package com.danebrown.reactor;
 
 import com.google.common.base.Strings;
 import io.netty.util.concurrent.FastThreadLocalThread;
+import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.Aware;
-import org.springframework.beans.factory.BeanFactory;
-import org.springframework.beans.factory.BeanFactoryAware;
-import org.springframework.beans.factory.BeanNameAware;
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.InitializingBean;
+import org.apache.commons.lang3.time.DateFormatUtils;
+import org.apache.commons.lang3.time.DateUtils;
+import org.joda.time.DateTimeUtils;
+import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessor;
-import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.beans.factory.support.BeanNameGenerator;
-import org.springframework.boot.SpringApplicationRunListener;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationListener;
-import org.springframework.context.LifecycleProcessor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 import reactor.core.Disposable;
+import reactor.core.publisher.BaseSubscriber;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.Mono;
@@ -39,6 +29,7 @@ import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -55,6 +46,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.LongConsumer;
 import java.util.function.Supplier;
 
@@ -66,34 +58,40 @@ import java.util.function.Supplier;
  */
 @Log4j2
 public class ReactorOneByOne implements ApplicationListener<ApplicationReadyEvent> {
+
+    private static String DATE_FORMAT="yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
     @Autowired
     ThreadPoolTaskExecutor taskExecutor;
+
     @Override
     public void onApplicationEvent(ApplicationReadyEvent event) {
         log.warn("ApplicationReadyEvent");
         this.starting();
     }
+
     @PostConstruct
-    public void postConstruct(){
+    public void postConstruct() {
         log.warn("postConstruct");
     }
 
-    public void initMethod(){
+    public void initMethod() {
         log.warn("ReactorOneByOne-->initMethod");
 
     }
 
-    public void destroyMethod(){
+    public void destroyMethod() {
         log.warn("ReactorOneByOne-->destroyMethod");
 
     }
+
     @PreDestroy
-    public void preDestroy(){
+    public void preDestroy() {
         log.warn("preDestroy");
 
     }
+
     public void starting() {
-        taskExecutor.execute(()-> {
+        taskExecutor.execute(() -> {
             try {
                 FastThreadLocalThread.sleep(3000);
                 init();
@@ -162,6 +160,7 @@ public class ReactorOneByOne implements ApplicationListener<ApplicationReadyEven
 
 
     }
+
     @ConsoleMenu(order = 1, name = "range", desc = "测试range方法")
     public void range() {
         Flux<Integer> range = Flux.range(1, 3).log("range").checkpoint("range");
@@ -387,11 +386,79 @@ public class ReactorOneByOne implements ApplicationListener<ApplicationReadyEven
 
     }
 
+    @SneakyThrows
     @ConsoleMenu(order = 8, name = "deferTest", desc = "defer的测试")
     public void deferTest() {
+        System.out.println("开始"+DateFormatUtils.format(new Date(),DATE_FORMAT));
+        Flux<String> flux = Flux.defer(() -> s -> {
+
+            s.onNext(DateFormatUtils.format(new Date(),DATE_FORMAT));
+            s.onNext(DateFormatUtils.format(new Date(),DATE_FORMAT));
+        })
+
+                //                .push(new Consumer<FluxSink<String>>() {
+                //                    @Override
+                //                    public void accept(FluxSink<String> stringFluxSink) {
+                //                        stringFluxSink.next(new Date().toString()).next(new Date().toString()).next(new Date().toString());
+                //                    }
+                //                }, FluxSink.OverflowStrategy.ERROR)
+                ;
+
+        Flux<Integer> maped = flux.doOnNext(new Consumer<String>() {
+            @Override
+            public void accept(String s) {
+                System.out.println("flux的doOnNext" + s);
+            }
+        }).flatMap(new Function<String, Publisher<Integer>>() {
+            @Override
+            public Publisher<Integer> apply(String str) {
+                return new Publisher<Integer>() {
+                    @Override
+                    public void subscribe(Subscriber<? super Integer> s) {
+                        s.onNext(str.length());
+                    }
+                };
+            }
+        }).doOnNext(item -> {
+            System.out.println("flatMap之后的" + item);
+        })
+        ;
+
+        System.out.println("准备subscribe"+DateFormatUtils.format(new Date(),
+                DATE_FORMAT));
+        Thread.sleep(1000);
+        maped.subscribe();
+
 
     }
 
+    @ConsoleMenu(order = 9, name = "backPressureTest", desc = "背压测试")
+    public void backPressureTest() {
+        Flux<String> source = Flux.push(stringFluxSink -> {
+            stringFluxSink.next(String.valueOf(System.currentTimeMillis()));
+
+            stringFluxSink.next(String.valueOf(System.currentTimeMillis()));
+            stringFluxSink.next(String.valueOf(System.currentTimeMillis()));
+        }, FluxSink.OverflowStrategy.ERROR);
+        source.map(String::toUpperCase).doOnNext(s -> {
+            System.out.println(s);
+        })
+
+                .subscribe(new BaseSubscriber<String>() {
+                    @Override
+                    protected void hookOnSubscribe(Subscription subscription) {
+
+                        request(1);
+                    }
+
+                    @Override
+                    protected void hookOnNext(String value) {
+                        request(1);
+                    }
+                })
+
+        ;
+    }
 
 
 }

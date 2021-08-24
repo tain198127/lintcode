@@ -299,6 +299,12 @@
             <artifactId>reactor-netty</artifactId>
             <version>1.0.5</version>
         </dependency>
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-test</artifactId>
+            <version>3.4.4</version>
+        </dependency>
+
 
         <!--sentinel begin-->
         <dependency>

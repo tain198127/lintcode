@@ -71,7 +71,6 @@
                      filePattern="${LOG_HOME}/${date:yyyy}/%d{MM}/%d{dd}/SyncLogProcess/${LOG_ARCHIVE_NAME}/JCToolsBlockingQueue-info-%i.log.gz"
                      immediateFlush="true">
             <Filters>
-                <MarkerFilter marker="JCToolLogProcess" onMatch="ACCEPT" onMismatch="DENY"/>
                 <!--如果是error级别拒绝，设置 onMismatch="NEUTRAL" 可以让日志经过后续的过滤器-->
                 <ThresholdFilter level="error" onMatch="DENY" onMismatch="NEUTRAL"/>
                 <!--如果是info\warn输出-->
