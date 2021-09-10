@@ -24,7 +24,13 @@ public class JOLTest {
     public static void printObjSize(Object object, String mesg) {
         ClassLayout classLayout = ClassLayout.parseInstance(object);
         GraphLayout graphLayout = GraphLayout.parseInstance(object);
-        log.info("{} \nall size [{}] bytes \nhead size:[{}] \ncontent " + "size:[{}]\n" + " struct:\n{}", mesg, graphLayout.totalSize(), classLayout.headerSize(), graphLayout.totalSize() - classLayout.headerSize(), classLayout.toPrintable(object));
+        System.out.println(mesg);
+        System.out.println("all size ["+graphLayout.totalSize()+"] bytes");
+        System.out.println("head size ["+classLayout.headerSize()+"]");
+        System.out.println("content size ["+(graphLayout.totalSize()-classLayout.headerSize())+"]");
+        System.out.println("struct:↓");
+        System.out.println(classLayout.toPrintable());
+//        System.out.println(graphLayout.toPrintable());
         System.out.println("--------------------------");
     }
 
@@ -49,6 +55,15 @@ public class JOLTest {
         //        thread.start();
 
         printObjSize(thread, "new Thread");
+
+        Object obj = new Object();
+        printObjSize(obj,"普通对象");
+
+        synchronized (obj){
+            printObjSize(obj,"经过synchronized修饰的obj");
+        }
+        printObjSize(obj,"synchronized完成后的obj");
+        log.warn("synchronized 的锁信息被记录在instance的头8个字节-markword上了；markword里面还记录了*gc*信息、hashcode信息等");
 
     }
 }
