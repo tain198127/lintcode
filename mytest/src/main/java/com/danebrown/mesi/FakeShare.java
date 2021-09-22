@@ -13,25 +13,34 @@ package com.danebrown.mesi;
  * 伪共享测试
  * 如果编译不过去，可以在Build/compiler/java compiler/pre module中增加
  * -parameters  --add-exports=java.base/jdk.internal.vm.annotation=ALL-UNNAMED  --add-exports=java.base/sun.net=ALL-UNNAMED  --add-exports=java.base/sun.net.util=ALL-UNNAMED  --add-exports=java.base/jdk.internal.misc=ALL-UNNAMED  --add-exports=java.base/sun.net.www=ALL-UNNAMED
+ *
  * @author danebrown
  */
 
 public class FakeShare {
+    private static Object p3Lock = new Object();
+    private static Object p4Lock = new Object();
+    private static long count = 10_000_000L;
     private volatile long p1;
     private volatile long p2;
-//    @Contended
-    private volatile long p3;
-//    @Contended
-    private volatile long p4;
-
+    private long p3;
+    //    @Contended
+    private long p4;
     private volatile long[] p5 = new long[15];
     private volatile long[] p6 = new long[15];
-    private static long count=10_000_000L;
+
+    public static void main(String[] args) throws InterruptedException {
+        FakeShare fakeShare = new FakeShare();
+        fakeShare.fakeShare();
+        fakeShare.synchronizedUnFakeShare();
+        fakeShare.paddingUnFakeShare();
+    }
+
     public void fakeShare() throws InterruptedException {
         Thread t1 = new Thread(new Runnable() {
             @Override
             public void run() {
-                while(p1 < count){
+                while (p1 < count) {
                     p1++;
                 }
             }
@@ -39,7 +48,7 @@ public class FakeShare {
         Thread t2 = new Thread(new Runnable() {
             @Override
             public void run() {
-                while (p2 < count){
+                while (p2 < count) {
                     p2++;
                 }
             }
@@ -49,24 +58,28 @@ public class FakeShare {
         t2.start();
         t1.join();
         t2.join();
-        System.out.printf("伪共享耗时:%d毫秒\n",System.currentTimeMillis()-start);
+        System.out.printf("伪共享耗时:%d毫秒\n", System.currentTimeMillis() - start);
 
     }
 
-    public void contentedUnFakeShare() throws InterruptedException {
+    public void synchronizedUnFakeShare() throws InterruptedException {
         Thread t1 = new Thread(new Runnable() {
             @Override
             public void run() {
-                while(p3 < count){
-                    p3++;
+                while (p3 < count) {
+                    synchronized (p3Lock){
+                        p3++;
+                    }
                 }
             }
         });
         Thread t2 = new Thread(new Runnable() {
             @Override
             public void run() {
-                while (p4 < count){
-                    p4++;
+                while (p4 < count) {
+                    synchronized (p4Lock){
+                        p4++;
+                    }
                 }
             }
         });
@@ -75,7 +88,7 @@ public class FakeShare {
         t2.start();
         t1.join();
         t2.join();
-        System.out.printf("非伪共享耗时:%d毫秒\n",System.currentTimeMillis()-start);
+        System.out.printf("synchronized非伪共享耗时:%d毫秒\n", System.currentTimeMillis() - start);
 
     }
 
@@ -83,7 +96,7 @@ public class FakeShare {
         Thread t1 = new Thread(new Runnable() {
             @Override
             public void run() {
-                while(p5[7] < count){
+                while (p5[7] < count) {
                     p5[7]++;
                 }
             }
@@ -91,7 +104,7 @@ public class FakeShare {
         Thread t2 = new Thread(new Runnable() {
             @Override
             public void run() {
-                while (p6[7] < count){
+                while (p6[7] < count) {
                     p6[7]++;
                 }
             }
@@ -101,13 +114,7 @@ public class FakeShare {
         t2.start();
         t1.join();
         t2.join();
-        System.out.printf("Padding结构非伪共享耗时:%d毫秒\n",System.currentTimeMillis()-start);
+        System.out.printf("Padding结构非伪共享耗时:%d毫秒\n", System.currentTimeMillis() - start);
 
-    }
-    public static void main(String[] args) throws InterruptedException {
-        FakeShare fakeShare = new FakeShare();
-        fakeShare.fakeShare();
-        fakeShare.contentedUnFakeShare();
-        fakeShare.paddingUnFakeShare();
     }
 }
