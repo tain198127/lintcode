@@ -19,7 +19,7 @@ public class DCLcheckFalse {
 
     private DCLcheckFalse() {
         rdm = ThreadLocalRandom.current().nextLong();
-        System.out.println(
+        System.out.println("如果出现两条表明出现了初始化错误"+
                 rdm+"--"+System.identityHashCode(this)+"--"+this.hashCode()
         );
     }

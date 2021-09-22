@@ -5,7 +5,7 @@ package com.danebrown.mesi;
 
 //import jdk.internal.vm.annotation.Contended;
 
-import sun.misc.Contended;
+//import sun.misc.Contended;
 
 /**
  * Created by danebrown on 2021/9/9
@@ -19,9 +19,9 @@ import sun.misc.Contended;
 public class FakeShare {
     private volatile long p1;
     private volatile long p2;
-    @Contended
+//    @Contended
     private volatile long p3;
-    @Contended
+//    @Contended
     private volatile long p4;
 
     private volatile long[] p5 = new long[15];
