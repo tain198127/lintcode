@@ -5,9 +5,6 @@ import io.netty.util.concurrent.FastThreadLocalThread;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.time.DateFormatUtils;
-import org.apache.commons.lang3.time.DateUtils;
-import org.joda.time.DateTimeUtils;
-import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +43,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.LongConsumer;
 import java.util.function.Supplier;
 
@@ -59,7 +55,7 @@ import java.util.function.Supplier;
 @Log4j2
 public class ReactorOneByOne implements ApplicationListener<ApplicationReadyEvent> {
 
-    private static String DATE_FORMAT="yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
+    private static String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX";
     @Autowired
     ThreadPoolTaskExecutor taskExecutor;
 
@@ -389,45 +385,38 @@ public class ReactorOneByOne implements ApplicationListener<ApplicationReadyEven
     @SneakyThrows
     @ConsoleMenu(order = 8, name = "deferTest", desc = "defer的测试")
     public void deferTest() {
-        System.out.println("开始"+DateFormatUtils.format(new Date(),DATE_FORMAT));
+        System.out.println("开始" + DateFormatUtils.format(new Date(), DATE_FORMAT));
         Flux<String> flux = Flux.defer(() -> s -> {
+            System.out.println("defer-begin");
 
-            s.onNext(DateFormatUtils.format(new Date(),DATE_FORMAT));
-            s.onNext(DateFormatUtils.format(new Date(),DATE_FORMAT));
-        })
-
-                //                .push(new Consumer<FluxSink<String>>() {
-                //                    @Override
-                //                    public void accept(FluxSink<String> stringFluxSink) {
-                //                        stringFluxSink.next(new Date().toString()).next(new Date().toString()).next(new Date().toString());
-                //                    }
-                //                }, FluxSink.OverflowStrategy.ERROR)
-                ;
+            s.onNext("defer" + DateFormatUtils.format(new Date(), DATE_FORMAT));
+            s.onNext("defer" + DateFormatUtils.format(new Date(), DATE_FORMAT));
+            System.out.println("defer-end");
+        }).map(s->{
+            return s.toString()+"map";
+        });
 
         Flux<Integer> maped = flux.doOnNext(new Consumer<String>() {
             @Override
             public void accept(String s) {
-                System.out.println("flux的doOnNext" + s);
+                System.out.println("flux的doOnNext|" + s);
             }
-        }).flatMap(new Function<String, Publisher<Integer>>() {
-            @Override
-            public Publisher<Integer> apply(String str) {
-                return new Publisher<Integer>() {
-                    @Override
-                    public void subscribe(Subscriber<? super Integer> s) {
-                        s.onNext(str.length());
-                    }
-                };
-            }
+        })
+
+                .flatMap(s -> {
+            return Flux.just(s.length());
         }).doOnNext(item -> {
             System.out.println("flatMap之后的" + item);
-        })
-        ;
+        });
 
-        System.out.println("准备subscribe"+DateFormatUtils.format(new Date(),
-                DATE_FORMAT));
+        System.out.println("准备subscribe" + DateFormatUtils.format(new Date(), DATE_FORMAT));
         Thread.sleep(1000);
+
         maped.subscribe();
+        //        maped.publish();
+        //        maped.blockFirst();
+        //        maped.publish().blockFirst();
+        //        FastThreadLocalThread.sleep(500);
 
 
     }
@@ -458,6 +447,25 @@ public class ReactorOneByOne implements ApplicationListener<ApplicationReadyEven
                 })
 
         ;
+    }
+
+    @ConsoleMenu(order = 10, name = "mapTest", desc = "map测试")
+    public void mapTest() {
+        Flux<Integer> flux = Flux.just("A", "B", "C", "D")
+                //                .flatMap(id->{
+                //
+                //                    int ascii = (int)id.toCharArray()[0];
+                //                    System.out.println("flatMap ascii-->"+id+"-->to");
+                //                    return Flux.just(ascii);
+                //                                    })
+                .map(id -> {
+                    int ascii = (int) id.toCharArray()[0];
+                    System.out.println("map ascii-->" + id + "-->to");
+                    return ascii;
+                }).doOnNext(i -> {
+                    System.out.println("doOnNext-->" + i);
+                });
+        flux.subscribe();
     }
 
 
