@@ -1,5 +1,7 @@
 package com.danebrown.jvm;
 
+import java.util.function.BiFunction;
+
 /**
  * Created by danebrown on 2021/9/26
  * mail: tain198127@163.com
@@ -19,5 +21,8 @@ public class SystemLock {
     public static void main(String[] args) {
         SystemLock systemLock = new SystemLock();
         systemLock.getSystemLock(()->"JAVA_HOME");
+
+
+
     }
 }

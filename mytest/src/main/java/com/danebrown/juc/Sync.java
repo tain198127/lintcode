@@ -9,6 +9,7 @@ package com.danebrown.juc;
 public class Sync {
     public static void main(String[] args) {
         int i = 0;
-
+        Thread t = new Thread();
+        
     }
 }
