@@ -69,25 +69,27 @@ public class SpelTest implements CommandLineRunner, ApplicationListener<Applicat
         String invokectxName = "";
         String invokeCtxAge = "";
         HashMap<String,String> wrapper = new HashMap<>();
-        invokeByObj(dataName,wrapper,"name","wrapperName");
-        invokeByObj(dataName,wrapper,"age","wrapperAge");
+        EvaluationContext context = new StandardEvaluationContext();
+        context.setVariable("txHeader", dataName);
+        context.setVariable("ctx",wrapper);
+        invokeByObj(context,"name","wrapperName");
+        invokeByObj(context,"age","wrapperAge");
+        log.error("{}",wrapper);
 
 
     }
     //调用动态对象
-    private void invokeByObj(DataName dataName, Map<String,String> wrapper,
+    private void invokeByObj(EvaluationContext context,
                              String sourceProperties, String targetProperties){
-        EvaluationContext context = new StandardEvaluationContext(dataName);
-        context.setVariable("txHeader", dataName);
-        context.setVariable("ctx",wrapper);
+
 
         String invokeSpel =
                 "#ctx['"+targetProperties+"']={#txHeader."+sourceProperties+
                         "}";
+        System.out.println("调用对象spel:"+invokeSpel);
         ExpressionParser methodCall = new SpelExpressionParser();
         Expression methodExpr = methodCall.parseExpression(invokeSpel);
         methodExpr.getValue(context);
-        log.error("{}",wrapper);
 
     }
     @Data
