@@ -1,4 +1,4 @@
-lexer grammar TestLexer;
+lexer grammar TestLexer; //词法定义
 SS:' SELECT ';
 FF:' FROM ';
 WW:' WHERE ';

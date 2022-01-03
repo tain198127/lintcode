@@ -71,8 +71,33 @@
             <artifactId>commons-lang3</artifactId>
             <version>RELEASE</version>
         </dependency>
-
-<!--mybatis-->
+<!--        groovy-->
+<!--        <dependency>-->
+<!--            <groupId>org.codehaus.groovy</groupId>-->
+<!--            <artifactId>groovy-all</artifactId>-->
+<!--            <version>3.0.8</version>-->
+<!--        </dependency>-->
+        <dependency>
+            <groupId>org.codehaus.groovy</groupId>
+            <artifactId>groovy</artifactId>
+            <version>2.5.13</version>
+        </dependency>
+        <dependency>
+            <groupId>ognl</groupId>
+            <artifactId>ognl</artifactId>
+            <version>3.2.21</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mvel</groupId>
+            <artifactId>mvel2</artifactId>
+            <version>2.4.0.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-jexl</artifactId>
+            <version>2.1.1</version>
+        </dependency>
+        <!--mybatis-->
 
         <dependency>
             <groupId>com.baomidou</groupId>
@@ -225,7 +250,7 @@
         <dependency>
             <groupId>org.antlr</groupId>
             <artifactId>antlr4-runtime</artifactId>
-            <version>4.7.2</version>
+            <version>4.9.1</version>
         </dependency>
 
 
@@ -336,6 +361,12 @@
             <groupId>com.alibaba.csp</groupId>
             <artifactId>sentinel-datasource-apollo</artifactId>
             <version>1.8.0</version>
+            <exclusions>
+                <exclusion>
+                    <artifactId>apollo-client</artifactId>
+                    <groupId>com.ctrip.framework.apollo</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <!--sentinel end-->
 
@@ -359,6 +390,35 @@
             <version>0.16</version>
         </dependency>
 <!--        JOL-->
+
+<!--        arthas-->
+
+        <dependency>
+            <groupId>com.taobao.arthas</groupId>
+            <artifactId>arthas-spring-boot-starter</artifactId>
+            <version>3.5.5</version>
+        </dependency>
+        <!--        arthas-->
+<!--        一种很高效的时间组件-->
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+            <version>2.10.13</version>
+        </dependency>
+<!--        一种高效的反射工具-->
+        <dependency>
+            <groupId>com.esotericsoftware</groupId>
+            <artifactId>reflectasm</artifactId>
+            <version>1.11.9</version>
+        </dependency>
+<!--        hutoo一种优秀的公共库-->
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+            <version>5.7.17</version>
+        </dependency>
+
+
     </dependencies>
     <dependencyManagement>
         <dependencies>

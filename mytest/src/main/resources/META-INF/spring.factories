@@ -1,2 +1,2 @@
-org.springframework.boot.SpringApplicationRunListener=\
-com.danebrown.reactor.ReactorMainListener
+#org.springframework.boot.SpringApplicationRunListener=\
+#com.danebrown.reactor.ReactorMainListener
