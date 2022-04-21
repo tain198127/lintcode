@@ -24,7 +24,7 @@ import javax.annotation.Resource;
 /**
  * Created by danebrown on 2021/6/30
  * mail: tain198127@163.com
- *
+ * 最简单的模式
  * @author danebrown
  */
 //@SpringBootApplication
