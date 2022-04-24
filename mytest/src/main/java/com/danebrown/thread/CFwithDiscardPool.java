@@ -45,7 +45,7 @@ public class CFwithDiscardPool {
         // future中队列的数量时，这个过程会夯住，永远不会再执行下去了。
         //这里配合completefuture allOf 配合DiscardOldestPolicy 或者DiscardPolicy就会有问题
         // 如果使用AbortPolicy 或者其他拒绝策略也OK
-        poolTaskExecutor.setRejectedExecutionHandler(new ThreadPoolExecutor.AbortPolicy());
+        poolTaskExecutor.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardPolicy());
         poolTaskExecutor.initialize();
 
         for(int i = 0; i < 100;i++){
