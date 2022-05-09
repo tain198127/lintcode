@@ -419,6 +419,14 @@
         </dependency>
 
 
+        <!--redis-->
+        <dependency>
+            <groupId>io.lettuce</groupId>
+            <artifactId>lettuce-core</artifactId>
+            <version>6.0.2.RELEASE</version>
+        </dependency>
+
+        <!--redis-->
     </dependencies>
     <dependencyManagement>
         <dependencies>
