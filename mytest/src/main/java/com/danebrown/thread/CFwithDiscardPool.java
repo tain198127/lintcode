@@ -26,6 +26,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
+
+/**
+ * 模拟使用CompleableFuture 配合Discard线程池出现的问题
+ */
 @Log4j2
 public class CFwithDiscardPool {
     public static void main(String[] args) {
