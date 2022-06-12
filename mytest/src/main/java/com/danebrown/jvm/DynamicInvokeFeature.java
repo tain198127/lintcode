@@ -19,9 +19,45 @@
 
 package com.danebrown.jvm;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Supplier;
+
 public class DynamicInvokeFeature {
     public static void main(String[] args) {
-        String x = "A"+args[0];
-        System.out.println(x);
+        FunctionInterfaceTest functionInterfaceTest = ()->{
+            return "hello";
+        };
+        String result = messageProcessor(functionInterfaceTest);
+        System.out.println(result);
+        Supplier<String> val =
+                () -> "11211-"+ThreadLocalRandom.current().nextInt();
+
+        System.out.println(val.get());
+        Flux.just("123")
+                .doOnNext(c->{
+            System.out.println("next"+c);
+        })
+                .flatMap((t)->{return Flux.just("map"+t);})
+                .defer(()->{
+            System.out.println("12");
+            return Flux.defer(()->{
+                System.out.println("13");
+                return Flux.just("131");
+            });
+        }).subscribe(consumer->{
+            System.out.println("consumer:"+consumer);
+        });
+        System.out.println("bye!");
+    }
+
+    public static String messageProcessor(FunctionInterfaceTest functionInterfaceTest){
+        return "process1 "+ functionInterfaceTest.sayIt();
+    }
+    @FunctionalInterface
+    public interface FunctionInterfaceTest{
+        public String sayIt();
     }
 }

@@ -72,7 +72,9 @@ public class RedisClusterTest {
         RedisAdvancedClusterReactiveCommands<String, String> async = connection.reactive();
 
         log.info("访问前前的connection是:{}", connection);
-        async.set("key", "123").then(async.set("key1", "234")).then(async.set("key2", "567")).checkpoint();
+        async.set("key", "kkk").then(async.set("key1", "GGG")).then(async.set(
+                "key2", "567"))
+                .subscribe();
 
 
         Mono<String> value = async.get("key");
@@ -130,14 +132,14 @@ public class RedisClusterTest {
     public static void main(String[] args) throws ExecutionException, InterruptedException {
         RedisClusterClient client = RedisClusterClient.create("redis" + "://127.0.0.1" + ":7000");
         simpleCmd(client);
-        Thread t = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                subscribe(client);
-            }
-        });
-        t.setDaemon(true);
-        t.start();
+//        Thread t = new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                subscribe(client);
+//            }
+//        });
+//        t.setDaemon(true);
+//        t.start();
 
         Scanner scanner = new Scanner(System.in);
         scanner.nextLine();
