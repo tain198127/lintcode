@@ -23,6 +23,7 @@ import io.lettuce.core.RedisChannelHandler;
 import io.lettuce.core.RedisConnectionStateListener;
 import io.lettuce.core.api.push.PushMessage;
 import io.lettuce.core.cluster.RedisClusterClient;
+import io.lettuce.core.cluster.RedisClusterURIUtil;
 import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
 import io.lettuce.core.cluster.api.push.RedisClusterPushListener;
 import io.lettuce.core.cluster.api.reactive.RedisAdvancedClusterReactiveCommands;
@@ -33,6 +34,7 @@ import lombok.extern.log4j.Log4j2;
 import reactor.core.publisher.Mono;
 
 import java.net.SocketAddress;
+import java.net.URI;
 import java.util.Scanner;
 import java.util.concurrent.ExecutionException;
 
@@ -125,21 +127,24 @@ public class RedisClusterTest {
 
             }
         });
-        statefulRedisClusterPubSubConnection.sync().subscribe("xxoo");
+        statefulRedisClusterPubSubConnection.sync().psubscribe("*");
 
     }
 
     public static void main(String[] args) throws ExecutionException, InterruptedException {
-        RedisClusterClient client = RedisClusterClient.create("redis" + "://127.0.0.1" + ":7000");
+        RedisClusterClient client = RedisClusterClient.create("redis://127.0" +
+                ".0.1:7000,127.0.0.1:7001,127.0.0.1:7002," +
+                "127.0.0.1:7003,127.0.0.1:7004,127.0" +
+                ".0.1:7005");
         simpleCmd(client);
-//        Thread t = new Thread(new Runnable() {
-//            @Override
-//            public void run() {
-//                subscribe(client);
-//            }
-//        });
-//        t.setDaemon(true);
-//        t.start();
+        Thread t = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                subscribe(client);
+            }
+        });
+        t.setDaemon(true);
+        t.start();
 
         Scanner scanner = new Scanner(System.in);
         scanner.nextLine();
