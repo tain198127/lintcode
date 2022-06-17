@@ -1,17 +1,22 @@
 package com.danebrown.sentinel;
 
 import com.alibaba.csp.sentinel.Entry;
+import com.alibaba.csp.sentinel.SphO;
 import com.alibaba.csp.sentinel.SphU;
 import com.alibaba.csp.sentinel.Tracer;
 import com.alibaba.csp.sentinel.annotation.SentinelResource;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
+import com.alibaba.csp.sentinel.slots.block.RuleConstant;
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeException;
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeRule;
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeRuleManager;
 import com.alibaba.csp.sentinel.slots.block.degrade.circuitbreaker.CircuitBreaker;
 import com.alibaba.csp.sentinel.slots.block.degrade.circuitbreaker.CircuitBreakerStrategy;
 import com.alibaba.csp.sentinel.slots.block.degrade.circuitbreaker.EventObserverRegistry;
+import com.alibaba.csp.sentinel.slots.block.flow.FlowRule;
+import com.alibaba.csp.sentinel.slots.block.flow.FlowRuleManager;
 import com.alibaba.csp.sentinel.util.TimeUtil;
+import com.danebrown.sentinel.extension.CustomSentinelProperty;
 import io.netty.util.concurrent.FastThreadLocalThread;
 import io.netty.util.internal.ThreadLocalRandom;
 import lombok.Data;
@@ -40,16 +45,16 @@ public class BasicSentinel {
     }
 
     public static void initFlowRules() {
-        //        List<FlowRule> rules = new ArrayList<>();
-        //        FlowRule rule = new FlowRule();
-        //        rule.setResource("HelloWorld");
-        //        rule.setGrade(RuleConstant.FLOW_GRADE_QPS);
-        //        // Set limit QPS to 20.
-        //        rule.setCount(20);
-        //        rules.add(rule);
-        //        CustomSentinelProperty basicSentinelProperty = new CustomSentinelProperty();
-        //        FlowRuleManager.register2Property(basicSentinelProperty);
-        //        FlowRuleManager.loadRules(rules);
+                List<FlowRule> rules = new ArrayList<>();
+                FlowRule rule = new FlowRule();
+                rule.setResource("HelloWorld");
+                rule.setGrade(RuleConstant.FLOW_GRADE_QPS);
+                // Set limit QPS to 20.
+                rule.setCount(1);
+                rules.add(rule);
+                CustomSentinelProperty basicSentinelProperty = new CustomSentinelProperty();
+                FlowRuleManager.register2Property(basicSentinelProperty);
+                FlowRuleManager.loadRules(rules);
 
         List<DegradeRule> degradeRules = new ArrayList<>();
         DegradeRule degradeRule = new DegradeRule();
@@ -64,17 +69,7 @@ public class BasicSentinel {
         degradeRules.add(degradeRule);
         DegradeRuleManager.loadRules(degradeRules);
 
-        //        List<DegradeRule> rules = new ArrayList<>();
-        //        DegradeRule rule = new DegradeRule(KEY)
-        //                .setGrade(CircuitBreakerStrategy.ERROR_RATIO.getType())
-        //                // Set ratio threshold to 50%.
-        //                .setCount(0.5d)
-        //                .setStatIntervalMs(30000)
-        //                .setMinRequestAmount(50)
-        //                // Retry timeout (in second)
-        //                .setTimeWindow(10);
-        //        rules.add(rule);
-        //        DegradeRuleManager.loadRules(rules);
+
 
     }
 
@@ -156,26 +151,19 @@ public class BasicSentinel {
     public void testDegrade() {
         AtomicLong indexer = new AtomicLong(0);
         for (int i = 0; i < 1000; i++) {
+            SphO.entry("HelloWorld");
             Entry entry = null;
             try {
 
                 Context context = degradeEntry(i);
                 entry = context.getEntry();
-                entry.exit();
+
+//                SphO.exit();
                 if(context.getThrowable() != null){
                     Tracer.traceEntry(context.getThrowable(), entry);
                 }
-//                entry = SphU.entry(KEY);
-//                //
-//                String age = this.degrade(String.valueOf(i));
-//                if (i < 10) {
-//                    throw new Exception("num is too small");
-//
-//                } else {
-//                    FastThreadLocalThread.sleep(ThreadLocalRandom.current().nextInt(100, 300));
-//                }
-//
-//                System.out.println(age);
+                entry.exit();
+
 
             } catch (BlockException e) {
                 //                System.out.println("熔断了");
