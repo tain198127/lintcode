@@ -16,7 +16,6 @@ import com.alibaba.csp.sentinel.slots.block.degrade.circuitbreaker.EventObserver
 import com.alibaba.csp.sentinel.slots.block.flow.FlowRule;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowRuleManager;
 import com.alibaba.csp.sentinel.util.TimeUtil;
-import com.danebrown.sentinel.extension.CustomSentinelProperty;
 import io.netty.util.concurrent.FastThreadLocalThread;
 import io.netty.util.internal.ThreadLocalRandom;
 import lombok.Data;
@@ -24,6 +23,9 @@ import lombok.extern.log4j.Log4j2;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -52,8 +54,6 @@ public class BasicSentinel {
                 // Set limit QPS to 20.
                 rule.setCount(1);
                 rules.add(rule);
-                CustomSentinelProperty basicSentinelProperty = new CustomSentinelProperty();
-                FlowRuleManager.register2Property(basicSentinelProperty);
                 FlowRuleManager.loadRules(rules);
 
         List<DegradeRule> degradeRules = new ArrayList<>();
@@ -73,11 +73,22 @@ public class BasicSentinel {
 
     }
 
-    public static void main(String[] args) throws BlockException {
+    public static void main(String[] args) throws BlockException, InterruptedException {
         BasicSentinel basicSentinel = new BasicSentinel();
         BasicSentinel.initFlowRules();
         registerStateChangeObserver();
-        basicSentinel.testDegrade();
+        ExecutorService es = Executors.newFixedThreadPool(8);
+        for(int i=0;i< 8;i++){
+            es.execute(()->{
+                try {
+                    basicSentinel.testDegrade();
+                } catch (BlockException e) {
+                    log.error(e);
+                }
+            });
+        }
+        es.awaitTermination(10, TimeUnit.SECONDS);
+        es.shutdown();
         System.err.println("结束了");
     }
 
@@ -148,17 +159,18 @@ public class BasicSentinel {
 
     }
 
-    public void testDegrade() {
+    public void testDegrade() throws BlockException {
         AtomicLong indexer = new AtomicLong(0);
         for (int i = 0; i < 1000; i++) {
-            SphO.entry("HelloWorld");
+            Boolean isBlocked = SphO.entry("HelloWorld");
+            if(isBlocked){
+                System.out.println("触发限流了");
+            }
             Entry entry = null;
             try {
 
                 Context context = degradeEntry(i);
                 entry = context.getEntry();
-
-//                SphO.exit();
                 if(context.getThrowable() != null){
                     Tracer.traceEntry(context.getThrowable(), entry);
                 }
@@ -166,8 +178,6 @@ public class BasicSentinel {
 
 
             } catch (BlockException e) {
-                //                System.out.println("熔断了");
-
                 if (e instanceof DegradeException) {
                     System.out.println("熔断了");
                     try {

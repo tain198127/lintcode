@@ -1,0 +1,22 @@
+spring:
+  output:
+    ansi:
+      enabled: always
+  application:
+    name: spyml
+  datasource:
+    url: jdbc:mysql://localhost:3306/SHARDING_TEST_1?characterEncoding=utf8
+    username: root
+    password: root
+    driver-class-name: com.mysql.jdbc.Driver
+server:
+  port: 8080
+logging:
+  level: debug
+  
+rules:
+  - !SHARDING
+    tables:
+      t_user:
+        actualDataNodes:
+          ds.t_user_${0..1}
