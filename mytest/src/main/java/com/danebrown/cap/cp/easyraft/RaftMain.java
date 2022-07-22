@@ -21,7 +21,7 @@ package com.danebrown.cap.cp.easyraft;
 
 import cn.hutool.core.lang.hash.CityHash;
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
+import lombok.extern.log4j.Log4j2;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -40,7 +40,7 @@ import java.io.IOException;
 import java.util.*;
 
 @RestController
-@Slf4j
+@Log4j2
 public class RaftMain {
     
     public static final String ERROR = "<ERR>";
@@ -189,6 +189,6 @@ public class RaftMain {
         if(logEntry.containsKey(version)){
             return Flux.just(logEntry.get(version));
         }
-        return Flux.just("nil");
+        return Flux.just(NULL);
     }
 }
