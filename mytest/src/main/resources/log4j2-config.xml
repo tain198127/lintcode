@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<Configuration status="WARN" monitorInterval="30">
+    <Properties>
+        <Property name="LOG_HOME" value="./log"/>
+        <Property name="LOG_ARCHIVE_NAME" value="archive"/>
+
+    </Properties>
+    <Appenders>
+
+        <Console name="Console" target="SYSTEM_OUT">
+<!--            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%15t] %-5level %logger{36}(%F:%L) - %msg%n"/>-->
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%15t] %-5level (%F:%L)->[%-5.30M{.1}] - %msg%n"/>
+
+        </Console>
+    </Appenders>
+
+    <Loggers>
+
+        <AsyncRoot level="INFO" includeLocation="true">
+            <AppenderRef ref="Console"/>
+        </AsyncRoot>
+    </Loggers>
+
+</Configuration>

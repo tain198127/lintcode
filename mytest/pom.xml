@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
@@ -8,14 +8,15 @@
     <artifactId>mytest</artifactId>
     <version>1.0-SNAPSHOT</version>
 
-    <!--
-        <project>
-            <properties>
-                <maven.compiler.source>1.8</maven.compiler.source>
-                <maven.compiler.target>1.8</maven.compiler.target>
-            </properties>
-        </project>
-    -->
+
+    <properties>
+        <!--            <maven.compiler.source>1.8</maven.compiler.source>-->
+        <!--            <maven.compiler.target>1.8</maven.compiler.target>-->
+        <ignite.version>2.12.0</ignite.version>
+        <h2.version>1.4.197</h2.version>
+    </properties>
+
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -52,11 +53,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-autoconfigure</artifactId>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>com.alibaba.spring.boot</groupId>-->
-<!--            <artifactId>dubbo-spring-boot-starter</artifactId>-->
-<!--            <version>2.0.0</version>-->
-<!--        </dependency>-->
+        <!--        <dependency>-->
+        <!--            <groupId>com.alibaba.spring.boot</groupId>-->
+        <!--            <artifactId>dubbo-spring-boot-starter</artifactId>-->
+        <!--            <version>2.0.0</version>-->
+        <!--        </dependency>-->
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>dubbo</artifactId>
@@ -71,12 +72,12 @@
             <artifactId>commons-lang3</artifactId>
             <version>RELEASE</version>
         </dependency>
-<!--        groovy-->
-<!--        <dependency>-->
-<!--            <groupId>org.codehaus.groovy</groupId>-->
-<!--            <artifactId>groovy-all</artifactId>-->
-<!--            <version>3.0.8</version>-->
-<!--        </dependency>-->
+        <!--        groovy-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.codehaus.groovy</groupId>-->
+        <!--            <artifactId>groovy-all</artifactId>-->
+        <!--            <version>3.0.8</version>-->
+        <!--        </dependency>-->
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy</artifactId>
@@ -108,6 +109,7 @@
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
+            <version>${h2.version}</version>
         </dependency>
 
         <dependency>
@@ -116,16 +118,17 @@
         </dependency>
 
 
-        <dependency>
-            <groupId>org.apache.shardingsphere</groupId>
-            <artifactId>sharding-jdbc-core</artifactId>
-            <version>5.1.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.shardingsphere</groupId>
-            <artifactId>sharding-jdbc-spring-boot-starter</artifactId>
-            <version>5.1.2</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.apache.shardingsphere</groupId>-->
+<!--            <artifactId>sharding-jdbc-core</artifactId>-->
+<!--            <version>5.1.1</version>-->
+<!--        </dependency>-->
+<!--        -->
+<!--        <dependency>-->
+<!--            <groupId>org.apache.shardingsphere</groupId>-->
+<!--            <artifactId>sharding-jdbc-spring-boot-starter</artifactId>-->
+<!--            <version>5.1.1</version>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>com.alibaba</groupId>
@@ -134,32 +137,31 @@
         </dependency>
 
 
-
         <!--        mybatis-->
 
-<!--        netty-->
+        <!--        netty-->
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
-<!--            <version>4.1.6.Final</version>-->
+            <!--            <version>4.1.6.Final</version>-->
         </dependency>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-transport</artifactId>
         </dependency>
 
-<!--        netty-->
+        <!--        netty-->
 
-<!--        log-->
+        <!--        log-->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
-<!--            <version>2.0.2</version>-->
+            <!--            <version>2.0.2</version>-->
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-core</artifactId>
-<!--            <version>2.0.2</version>-->
+            <!--            <version>2.0.2</version>-->
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -168,7 +170,7 @@
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-slf4j-impl</artifactId>
-<!--            <version>2.12.1</version>-->
+            <!--            <version>2.12.1</version>-->
         </dependency>
         <dependency>
             <groupId>org.jctools</groupId>
@@ -181,7 +183,7 @@
             <version>3.4.4</version>
         </dependency>
 
-<!--        log-->
+        <!--        log-->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -280,7 +282,7 @@
             <version>2.10.3</version>
             <optional>true</optional>
         </dependency>
-<!--        deeplearning-->
+        <!--        deeplearning-->
         <!-- https://mvnrepository.com/artifact/org.deeplearning4j/deeplearning4j-core -->
         <dependency>
             <groupId>org.deeplearning4j</groupId>
@@ -371,7 +373,6 @@
         <!--sentinel end-->
 
 
-
         <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
@@ -383,35 +384,35 @@
             <version>2.10.4</version>
         </dependency>
 
-<!--        JOL-->
+        <!--        JOL-->
         <dependency>
             <groupId>org.openjdk.jol</groupId>
             <artifactId>jol-core</artifactId>
             <version>0.16</version>
         </dependency>
-<!--        JOL-->
+        <!--        JOL-->
 
-<!--        arthas-->
-
-<!--        <dependency>-->
-<!--            <groupId>com.taobao.arthas</groupId>-->
-<!--            <artifactId>arthas-spring-boot-starter</artifactId>-->
-<!--            <version>3.5.5</version>-->
-<!--        </dependency>-->
         <!--        arthas-->
-<!--        一种很高效的时间组件-->
+
+        <!--        <dependency>-->
+        <!--            <groupId>com.taobao.arthas</groupId>-->
+        <!--            <artifactId>arthas-spring-boot-starter</artifactId>-->
+        <!--            <version>3.5.5</version>-->
+        <!--        </dependency>-->
+        <!--        arthas-->
+        <!--        一种很高效的时间组件-->
         <dependency>
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
             <version>2.10.13</version>
         </dependency>
-<!--        一种高效的反射工具-->
+        <!--        一种高效的反射工具-->
         <dependency>
             <groupId>com.esotericsoftware</groupId>
             <artifactId>reflectasm</artifactId>
             <version>1.11.9</version>
         </dependency>
-<!--        hutoo一种优秀的公共库-->
+        <!--        hutoo一种优秀的公共库-->
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
@@ -438,6 +439,55 @@
             <groupId>com.hazelcast</groupId>
             <artifactId>hazelcast-client</artifactId>
             <version>3.12.12</version>
+        </dependency>
+        <!--ignate begin-->
+        <dependency>
+            <groupId>org.apache.ignite</groupId>
+            <artifactId>ignite-core</artifactId>
+            <version>${ignite.version}</version>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.apache.ignite</groupId>-->
+<!--            <artifactId>ignite-spring</artifactId>-->
+<!--            <version>${ignite.version}</version>-->
+<!--        </dependency>-->
+        <dependency>
+            <groupId>org.apache.ignite</groupId>
+            <artifactId>ignite-log4j2</artifactId>
+            <version>${ignite.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ignite</groupId>
+            <artifactId>ignite-aop</artifactId>
+            <version>${ignite.version}</version>
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.apache.ignite</groupId>-->
+<!--            <artifactId>ignite-direct-io</artifactId>-->
+<!--            <version>${ignite.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.apache.ignite</groupId>-->
+<!--            <artifactId>ignite-indexing</artifactId>-->
+<!--            <version>${ignite.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.apache.ignite</groupId>-->
+<!--            <artifactId>ignite-ml</artifactId>-->
+<!--            <version>${ignite.version}</version>-->
+<!--        </dependency>-->
+        <!--ignate end -->
+
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger2</artifactId>
+            <version>2.9.2</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger-ui</artifactId>
+            <version>2.9.2</version>
         </dependency>
     </dependencies>
     <dependencyManagement>
