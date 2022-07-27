@@ -21,6 +21,7 @@ package com.danebrown.ignate.client;
 
 import lombok.extern.log4j.Log4j2;
 import org.apache.ignite.Ignition;
+import org.apache.ignite.cache.CacheAtomicityMode;
 import org.apache.ignite.cache.CacheMode;
 import org.apache.ignite.cache.CacheWriteSynchronizationMode;
 import org.apache.ignite.client.ClientCache;
@@ -63,7 +64,12 @@ public class IgniteClientBean {
 
 
 
-        ClientConfiguration cfg = new ClientConfiguration().setAddresses("192.168.3.142:10800");
+        ClientConfiguration cfg = new ClientConfiguration().setAddresses("192.168.3.142:10800")
+                .setPartitionAwarenessEnabled(true)
+                .setTcpNoDelay(true)
+                
+                
+                ;
         try {
             client = Ignition.startClient(cfg);
         }catch (Exception ex){
@@ -72,17 +78,20 @@ public class IgniteClientBean {
             
             // Get data from the cache
     }
+    ClientCacheConfiguration clientcacheCfg = new ClientCacheConfiguration().setName("References")
+            .setCacheMode(CacheMode.REPLICATED)
+            .setAtomicityMode(CacheAtomicityMode.TRANSACTIONAL)
+            .setCopyOnRead(true)
+            .setDataRegionName("testregion")
+            
+            .setWriteSynchronizationMode(CacheWriteSynchronizationMode.FULL_SYNC);
     public String get(String cacheName){
-        ClientCacheConfiguration clientcacheCfg = new ClientCacheConfiguration().setName("References")
-                .setCacheMode(CacheMode.REPLICATED)
-                .setWriteSynchronizationMode(CacheWriteSynchronizationMode.FULL_SYNC);
+        
         ClientCache<String,String> cache = client.getOrCreateCache(clientcacheCfg);
         return cache.get(cacheName);
     }
     public void set(String cacheName,String value){
-        ClientCacheConfiguration clientcacheCfg = new ClientCacheConfiguration().setName("References")
-                .setCacheMode(CacheMode.REPLICATED)
-                .setWriteSynchronizationMode(CacheWriteSynchronizationMode.FULL_SYNC);
+        
         ClientCache<String,String> cache = client.getOrCreateCache(clientcacheCfg);
         cache.put(cacheName,value);
     }
