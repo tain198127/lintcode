@@ -3,6 +3,7 @@ package com.danebrown.sentinel;
 import com.alibaba.csp.sentinel.Entry;
 import com.alibaba.csp.sentinel.ErrorEntryFreeException;
 import com.alibaba.csp.sentinel.SphU;
+import com.alibaba.csp.sentinel.Tracer;
 import com.alibaba.csp.sentinel.annotation.SentinelResource;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeRule;
@@ -55,7 +56,7 @@ public class BasicSlowSentinel {
         DegradeRule rule = new DegradeRule(KEY)
                 .setGrade(CircuitBreakerStrategy.SLOW_REQUEST_RATIO.getType())
                 // Max allowed response time
-                .setCount(50)
+                .setCount(30)
                 // Retry timeout (in second)
                 .setTimeWindow(10)
                 // Circuit breaker opens when slow request ratio > 60%
@@ -141,7 +142,7 @@ public class BasicSlowSentinel {
                     return "ok"+index.incrementAndGet();
                 })
                         .then(fn.apply(sleep))
-                        .timeout(Duration.ofMillis(60),Mono.from(new Publisher<String>() {
+                        .timeout(Duration.ofMillis(80),Mono.from(new Publisher<String>() {
                             @Override
                             public void subscribe(Subscriber<? super String> s) {
                                 FIRST_TIME_OUT_START.updateAndGet(operand -> {
@@ -154,7 +155,7 @@ public class BasicSlowSentinel {
                                 });
                                 TimeoutException e = new TimeoutException("时间超过"+timeout);
                                 log.warn("第{}批次.捕获超时耗时:{},超时判定:{};循环第{}次",batch,System.currentTimeMillis()-beginTime,timeout, finalI);
-//                                Tracer.traceEntry(e, finalEntry);
+                                Tracer.traceEntry(e, finalEntry);
                                 finalEntry.exit();
                             }
                         }))
@@ -168,7 +169,7 @@ public class BasicSlowSentinel {
                 FIRST_TOUCH_GRADE.updateAndGet(operand -> {
                     if(operand == 0){
                         long time = System.currentTimeMillis();
-                        log.error("第一次触发Degrade时间:"+time);
+                        log.error("第一次触发Degrade时间:{};超时逃逸时间:{}(毫秒)",time,time-FIRST_TIME_OUT_START.get());
                         return time;
                     }
                     return operand;
