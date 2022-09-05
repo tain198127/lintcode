@@ -19,7 +19,8 @@ import reactor.core.scheduler.Schedulers;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -69,20 +70,23 @@ public class BasicSlowSentinel {
         BasicSlowSentinel basicSentinel = new BasicSlowSentinel();
         BasicSlowSentinel.initFlowRules();
         registerStateChangeObserver();
-        ExecutorService es = Executors.newFixedThreadPool(8);
-        
-        for(int i=0;i< 8;i++){
-            es.execute(()->{
-                try {
-                    basicSentinel.testDegrade();
-                } catch (BlockException e) {
-                    log.error(e);
-                }
-            });
-        }
-        es.awaitTermination(10, TimeUnit.SECONDS);
-        es.shutdown();
+        basicSentinel.testDegrade();
+//        ExecutorService es = Executors.newCachedThreadPool(new DaemonThreadFactory("test"));
+//        
+//        for(int i=0;i< 1;i++){
+//            es.execute(()->{
+//                try {
+//                    basicSentinel.testDegrade();
+//                } catch (BlockException e) {
+//                    log.error(e);
+//                }
+//            });
+//        }
+//        es.shutdown();
+//        es.awaitTermination(1, TimeUnit.SECONDS);
         System.err.println("结束了");
+        System.exit(0);
+        return;
     }
 
     /**
@@ -106,12 +110,13 @@ public class BasicSlowSentinel {
     
 
     public void testDegrade() throws BlockException {
-        
-        for (int i = 0; i < 10; i++) {
+        long beginTime = System.currentTimeMillis();
+        long endTime = -1;
+        for (int i = 0; i < 50; i++) {
             Entry entry = null;
             try {
                 entry = SphU.entry(KEY);
-                int sleep = ThreadLocalRandom.current().nextInt(40,60);
+                int sleep = ThreadLocalRandom.current().nextInt(400,600);
                 Mono<String> m = Mono.fromCallable(() -> {
                     FastThreadLocalThread.sleep(sleep);
                     return "ok"+index.incrementAndGet();
@@ -120,12 +125,16 @@ public class BasicSlowSentinel {
                     int v = index.incrementAndGet();
                     log.warn("超时了"+v);
                     return "mock"+v;
-                }), Schedulers.parallel());
+                }), Schedulers.boundedElastic());
 
                 log.info(m.block());
                 m.subscribe();
             }
             catch (BlockException ex){
+                if(endTime == -1){
+                    endTime = System.currentTimeMillis();
+                    log.warn("第一次触发耗时：{}",endTime-beginTime);
+                }
                 log.error("异常信息:{}--->{}",ex.getRule().getResource(),ex.getMessage());
             }
             finally {
@@ -135,7 +144,7 @@ public class BasicSlowSentinel {
                 
             }
         }
-
+        log.warn("本次耗时：{}",endTime-beginTime);
 
     }
 }
