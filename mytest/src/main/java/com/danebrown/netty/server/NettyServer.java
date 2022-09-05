@@ -1,6 +1,7 @@
 package com.danebrown.netty.server;
 
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
@@ -9,6 +10,7 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import lombok.extern.log4j.Log4j2;
@@ -20,6 +22,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.event.ContextClosedEvent;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * Created by danebrown on 2021/6/30
@@ -55,7 +58,9 @@ public class NettyServer implements CommandLineRunner, ApplicationListener<Conte
     public void run(String... args) {
 
         serverBootstrap = new ServerBootstrap();
-        serverBootstrap.group(boss, workers).channel(NioServerSocketChannel.class).handler(new LoggingHandler(LogLevel.DEBUG)).childHandler(new ChannelInitializer() {
+        serverBootstrap.group(boss, workers).channel(NioServerSocketChannel.class)
+                .handler(new LoggingHandler(LogLevel.DEBUG))
+                .childHandler(new ChannelInitializer() {
             @Override
             public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
                 log.error("exceptionCaught:ChannelHandlerContext:{};", ctx, cause);
@@ -78,7 +83,13 @@ public class NettyServer implements CommandLineRunner, ApplicationListener<Conte
             protected void initChannel(Channel channel) throws Exception {
                 log.info("initChannel:{}", channel);
                 ChannelPipeline p = channel.pipeline();
-
+                p.addLast(new ByteToMessageDecoder() {
+                    //ByteToMessageDecoder是用来解码的。将ByteBuf中可能被截断的byte数组，做切割。切割成完整的数组
+                    @Override
+                    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+                        
+                    }
+                });
                 p.addLast(new TestConsoleHandler());
             }
         });

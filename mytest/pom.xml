@@ -424,7 +424,7 @@
         <dependency>
             <groupId>io.lettuce</groupId>
             <artifactId>lettuce-core</artifactId>
-            <version>6.0.2.RELEASE</version>
+            <version>6.1.8.RELEASE</version>
         </dependency>
 
         <!--redis-->
@@ -489,7 +489,21 @@
             <artifactId>springfox-swagger-ui</artifactId>
             <version>2.9.2</version>
         </dependency>
+        <dependency>
+            <groupId>com.netease.nim</groupId>
+            <artifactId>camellia-redis-proxy-spring-boot-starter</artifactId>
+            <version>1.0.59</version>
+        </dependency>
+        
     </dependencies>
+    <profiles>
+        <profile>
+            <id>redis</id>
+            <dependencies>
+                
+            </dependencies>
+        </profile>
+    </profiles>
     <dependencyManagement>
         <dependencies>
             <dependency>

@@ -17,7 +17,7 @@ import java.io.UnsupportedEncodingException;
 public class TestConsoleHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws UnsupportedEncodingException {
-
+        //直接这么做会有问题，因为还没有被解码。并发的时候，会导致msg里面包含了不完整的对象
         log.info("channelRead:{};msg:{}",ctx,msg);
         ByteBuf result = (ByteBuf) msg;
         byte[] result1 = new byte[result.readableBytes()];

@@ -37,7 +37,7 @@ import reactor.core.publisher.Flux;
 public class IgnateClient {
     @Autowired
     IgniteBean igniteBean;
-    @ApiOperation(value = "获取用户信息",notes = "根据id获取用户详细信息")
+    @ApiOperation(value     = "获取用户信息",notes = "根据id获取用户详细信息")
     @ApiResponses({
             @ApiResponse(code = 200,message = "请求成功"),
             @ApiResponse(code = 400,message = "缺少必要的请求参数"),
