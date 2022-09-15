@@ -494,7 +494,14 @@
             <artifactId>camellia-redis-proxy-spring-boot-starter</artifactId>
             <version>1.0.59</version>
         </dependency>
-        
+        <!-- https://mvnrepository.com/artifact/net.openhft/affinity -->
+        <dependency>
+            <groupId>net.openhft</groupId>
+            <artifactId>affinity</artifactId>
+            <version>3.20.0</version>
+        </dependency>
+
+
     </dependencies>
     <profiles>
         <profile>
