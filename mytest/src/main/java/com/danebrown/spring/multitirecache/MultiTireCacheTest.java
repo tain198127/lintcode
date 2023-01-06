@@ -10,6 +10,7 @@ import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
 /**
  * Created by danebrown on 2021/10/25
@@ -19,6 +20,7 @@ import org.springframework.context.ApplicationListener;
  */
 @Log4j2
 @SpringBootApplication(scanBasePackages = {"com.danebrown.spring.multitirecache"})
+@EnableAspectJAutoProxy(exposeProxy = true)
 public class MultiTireCacheTest implements CommandLineRunner,
         ApplicationListener<ApplicationReadyEvent> {
     @Autowired

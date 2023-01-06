@@ -5,18 +5,13 @@ import io.netty.util.concurrent.FastThreadLocalThread;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.time.DateFormatUtils;
-import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import reactor.core.Disposable;
-import reactor.core.publisher.BaseSubscriber;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.FluxSink;
-import reactor.core.publisher.Mono;
-import reactor.core.publisher.SynchronousSink;
+import reactor.core.publisher.*;
 import reactor.core.scheduler.Schedulers;
 
 import javax.annotation.PostConstruct;
@@ -24,27 +19,13 @@ import javax.annotation.PreDestroy;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Scanner;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
-import java.util.function.LongConsumer;
-import java.util.function.Supplier;
+import java.util.function.*;
 
 /**
  * Created by danebrown on 2021/4/1
@@ -466,6 +447,34 @@ public class ReactorOneByOne implements ApplicationListener<ApplicationReadyEven
                     System.out.println("doOnNext-->" + i);
                 });
         flux.subscribe();
+    }
+    @ConsoleMenu(order = 11, name = "Multiplexing", desc = "多路复用")
+    public void Multiplexing() throws ExecutionException, InterruptedException {
+        CompletableFuture<Flux<String>> fluxFuture = CompletableFuture.supplyAsync(() -> {
+            Flux<String> flux = Flux.push(
+                    stringFlx->{
+                        stringFlx.next("123"+"["+Thread.currentThread().getId()+"]");
+                        stringFlx.next("456"+"["+Thread.currentThread().getId()+"]");
+                        stringFlx.next("789"+"["+Thread.currentThread().getId()+"]");
+                    }, FluxSink.OverflowStrategy.ERROR
+            );
+            return flux;
+        });
+        fluxFuture.whenCompleteAsync((v,e)->{
+            System.out.println(Thread.currentThread().getId());
+            v.map(s -> s+"apply:"+Thread.currentThread().getId())
+                    .doOnNext(c->{
+                        System.out.println(c+"T:"+Thread.currentThread().getId());
+                    }).subscribe();
+        });
+//       fluxFuture.thenApply((t)->
+//               
+//           t.map(s -> s+"apply:"+Thread.currentThread().getId())
+//                   .doOnNext(c->{
+//                       System.out.println(c+"T:"+Thread.currentThread().getId());
+//                   })
+//       );
+       fluxFuture.join().subscribe();
     }
 
 

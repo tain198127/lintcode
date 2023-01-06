@@ -1,7 +1,7 @@
 package com.danebrown.spring.multitirecache.simplebean;
 
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 /**
  * Created by danebrown on 2021/10/25
@@ -9,12 +9,13 @@ import org.springframework.stereotype.Component;
  *
  * @author danebrown
  */
-@Component("beanC")
+@Log4j2
 public class BeanC {
     @Autowired
     private BeanA a;
-
+    @MultiTireCache("C")
     public void sayHello(){
+        log.warn("hello B");
         a.sayByCHello("BeanC");
     }
 
