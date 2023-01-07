@@ -1,7 +1,7 @@
 package com.danebrown.spring.multitirecache;
 
 import com.danebrown.reactor.ReactorMain;
-import com.danebrown.spring.multitirecache.simplebean.BeanA;
+import com.danebrown.spring.multitirecache.simplebean.SimpleCycleDependBeanA;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -24,7 +24,7 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 public class MultiTireCacheTest implements CommandLineRunner,
         ApplicationListener<ApplicationReadyEvent> {
     @Autowired
-    private BeanA a;
+    private SimpleCycleDependBeanA a;
 
     public static void main(String[] args) {
         SpringApplication springApplication = new SpringApplication(ReactorMain.class);

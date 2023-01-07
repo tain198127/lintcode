@@ -19,7 +19,7 @@
 
 package com.danebrown.spring.multitirecache.beanfact;
 
-import com.danebrown.spring.multitirecache.simplebean.BeanB;
+import com.danebrown.spring.multitirecache.simplebean.SimpleCycleDependBeanB;
 import org.springframework.beans.factory.FactoryBean;
 
 /**
@@ -29,20 +29,20 @@ import org.springframework.beans.factory.FactoryBean;
  * @author danebrown
  */
 
-public class BeanBFactory implements FactoryBean<BeanB>  {
+public class BeanBFactory implements FactoryBean<SimpleCycleDependBeanB>  {
 
     
 
     @Override
-    public BeanB getObject() throws Exception {
-        BeanB b = new BeanB();
+    public SimpleCycleDependBeanB getObject() throws Exception {
+        SimpleCycleDependBeanB b = new SimpleCycleDependBeanB();
         return b;
     }
 
 
     @Override
     public Class<?> getObjectType() {
-        return BeanB.class;
+        return SimpleCycleDependBeanB.class;
     }
 
 
