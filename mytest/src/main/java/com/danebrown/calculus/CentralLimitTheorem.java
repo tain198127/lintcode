@@ -3,11 +3,8 @@ package com.danebrown.calculus;
 import com.google.common.primitives.Doubles;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.OptionalDouble;
+import java.text.MessageFormat;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
@@ -22,6 +19,7 @@ import java.util.stream.Collectors;
  * Step5: 计算initRandomList的均值 means1和方差var1
  * step6: 比较means和means1，以及var*N(样本均值空间的大小) 和var1
  * Step7: 会发现可以通过局部推算整体的均值和方差
+ *
  * @author danebrown
  */
 @Slf4j
@@ -52,11 +50,14 @@ public class CentralLimitTheorem {
         //样本均值
         Double sampleMeans = centralLimitTheorem.means(sample);
         //样本方差
-        Double sampleVar = centralLimitTheorem.var(sample) * 1000;
+        Double sampleVar = centralLimitTheorem.var(sample) * 10000;
+        System.out.printf("整体均值:%f，整体方差:%f\n",means,var);
         log.info("对数器的整体均值:{}，整体方差:{}", means, var);
-
+        System.out.printf("样本均值:%f，样本方差:%f\n",sampleMeans,sampleVar);
         log.info("样本均值:{}，样本方差:{}", sampleMeans, sampleVar);
-        //        log.info("整体均值:{}",sampleMeans);
+        Double meansAccurRate =  Math.abs(sampleMeans - means)/means;
+        Double varAccurRate = Math.abs(sampleVar-var)/var;
+        System.out.printf("样本均值损失率%f, 样本方差损失率:%f\n", meansAccurRate,varAccurRate);
 
     }
 
@@ -89,6 +90,7 @@ public class CentralLimitTheorem {
 
     /**
      * 求均值
+     *
      * @param list
      * @return
      */
@@ -99,6 +101,7 @@ public class CentralLimitTheorem {
 
     /**
      * 求方差
+     *
      * @param list
      * @return
      */
