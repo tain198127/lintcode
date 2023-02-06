@@ -1,5 +1,6 @@
 package com.danebrown.jvm;
 
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.openjdk.jol.info.ClassLayout;
 import org.openjdk.jol.info.GraphLayout;
@@ -40,7 +41,59 @@ public class JOLTest {
 //        System.out.println(graphLayout.toPrintable());
         System.out.println("--------------------------");
     }
+    @Data
+    public static class InnerMap6{
+        private int age;
+        private String name;
+        private String address;
+        private String address1;
+        private String address2;
+        private String address3;
+    }
+    @Data
+    public static class InnerMap5{
+        private int age;
+        private String name;
+        private String address;
+        private String address1;
+        private String address2;
+    }
+    @Data
+    public static class InnerMap4{
+        private int age;
+        private String name;
+        private String address;
+        private String address1;
+    }
+    @Data
+    public static class InnerMap3{
+        private int age;
+        private String name;
+        private String address;
+    }
 
+    @Data
+    public static class InnerMap2{
+        private int age;
+        private String name;
+    }
+    @Data
+    public static class InnerMap1{
+        private String name;
+    }
+    @Data
+    public static class MixInnerMap{
+        private InnerMap5 innerMap5;
+        private InnerMap6 innerMap6;
+        private InnerMap4 innerMap4;
+        private InnerMap3 innerMap3;
+        private InnerMap2 innerMap2;
+        private InnerMap1 innerMap1;
+    }
+    @Data
+    public static class InheriteMixInnerMap extends MixInnerMap{
+        private String testAge;
+    }
     public static void main(String[] args) {
 
         int[][] multiDimArr = new int[128][2];
@@ -61,7 +114,7 @@ public class JOLTest {
         });
         //        thread.start();
 
-        printObjSize(thread, "new Thread");
+//        printObjSize(thread, "new Thread");
 
         Object obj = new Object();
         printObjSize(obj,"普通对象");
@@ -71,6 +124,16 @@ public class JOLTest {
         }
         printObjSize(obj,"synchronized完成后的obj");
         log.warn("synchronized 的锁信息被记录在instance的头8个字节-markword上了；markword里面还记录了*gc*信息、hashcode信息等");
+
+
+        printObjSize(new InnerMap6(),"6个字段的对象大小");
+        printObjSize(new InnerMap5(),"5个字段的对象大小");
+        printObjSize(new InnerMap4(),"4个字段的对象大小");
+        printObjSize(new InnerMap3(),"3个字段的对象大小");
+        printObjSize(new InnerMap2(),"2个字段的对象大小");
+        printObjSize(new InnerMap1(),"1个字段的对象大小");
+        printObjSize(new MixInnerMap(), "复合对象展会用空间");
+        printObjSize(new InheriteMixInnerMap(), "继承的复合对象占用空间");
 
 
         int len = 500000;

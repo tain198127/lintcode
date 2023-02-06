@@ -7,7 +7,10 @@ package com.danebrown.mesi;
 
 //import sun.misc.Contended;
 
+import io.grpc.netty.shaded.io.netty.util.internal.PlatformDependent;
+
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import java.util.function.IntUnaryOperator;
 
 /**
@@ -25,19 +28,26 @@ public class FakeShare {
     private static Object p4Lock = new Object();
     private static long COUNT_VAL = 10_000_000L;
     private volatile long p1;
-
+    private AtomicIntegerFieldUpdater<CountBean> atomicIntegerFieldUpdater = AtomicIntegerFieldUpdater.newUpdater(CountBean.class,"count");
     private long p3;
 
     private volatile long[] p5 = new long[15];
 
     private volatile AtomicInteger p7 = new AtomicInteger();
-
+    private volatile CountBean p8 = new CountBean();
+    public static class CountBean {
+        volatile int count;
+        public CountBean() {
+            this.count = 0;
+        }
+    }
     public static void main(String[] args) throws InterruptedException {
         FakeShare fakeShare = new FakeShare();
         fakeShare.fakeShare();
         fakeShare.synchronizedUnFakeShare();
         fakeShare.paddingUnFakeShare();
         fakeShare.atomicfakeShare();
+        fakeShare.atomicUpdaterFakeShare();
     }
 
     public void fakeShare() throws InterruptedException {
@@ -63,10 +73,35 @@ public class FakeShare {
         t2.start();
         t1.join();
         t2.join();
-        System.out.printf("伪共享耗时:%d毫秒\n", System.currentTimeMillis() - start);
+        System.out.printf("volatile伪共享耗时:%d毫秒\n", System.currentTimeMillis() - start);
 
     }
-
+    public void atomicUpdaterFakeShare() throws InterruptedException {
+        long count = COUNT_VAL;
+        Thread t2 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (atomicIntegerFieldUpdater.incrementAndGet(p8)<count){
+                    ;;
+                }
+            }
+        });
+        Thread t1 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (atomicIntegerFieldUpdater.incrementAndGet(p8)<count){
+                    ;;
+                }
+            }
+        });
+        long start = System.currentTimeMillis();
+        t1.start();
+        t2.start();
+        t1.join();
+        t2.join();
+        System.out.printf("atomicUpdater伪共享耗时:%d毫秒\n",
+                System.currentTimeMillis() - start);
+    }
     public void atomicfakeShare() throws InterruptedException {
         long count = COUNT_VAL;
         Thread t2 = new Thread(new Runnable() {

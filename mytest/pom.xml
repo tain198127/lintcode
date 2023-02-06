@@ -509,14 +509,14 @@
 
 
     </dependencies>
-    <profiles>
-        <profile>
-            <id>redis</id>
-            <dependencies>
-                
-            </dependencies>
-        </profile>
-    </profiles>
+<!--    <profiles>-->
+<!--        <profile>-->
+<!--            <id>redis</id>-->
+<!--            <dependencies>-->
+<!--                -->
+<!--            </dependencies>-->
+<!--        </profile>-->
+<!--    </profiles>-->
     <dependencyManagement>
         <dependencies>
             <dependency>
