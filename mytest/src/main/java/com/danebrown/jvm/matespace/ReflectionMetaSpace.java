@@ -3,6 +3,7 @@ package com.danebrown.jvm.matespace;
 import cn.hutool.core.lang.Pair;
 import com.esotericsoftware.reflectasm.ConstructorAccess;
 import com.esotericsoftware.reflectasm.MethodAccess;
+import io.swagger.models.auth.In;
 import lombok.extern.log4j.Log4j2;
 import org.apache.commons.lang3.tuple.Triple;
 import org.reflections.Reflections;
@@ -16,6 +17,8 @@ import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import javax.annotation.PostConstruct;
+import java.io.*;
+import java.lang.management.ManagementFactory;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -67,11 +70,50 @@ public class ReflectionMetaSpace implements CommandLineRunner {
             }else if(option==2){
                 jdkInvoke(list);
             }
+            printCls();
             log.info("结果：{}", usages);
         }
 
     }
+    public void printCls(){
+        String name = ManagementFactory.getRuntimeMXBean().getName();
+        String pid = name.split("@")[0];
+        System.out.println(pid);
+        String shell = String.format("jcmd %s VM.class_hierarchy|grep reflect|wc -l",pid);
+        System.out.println("请执行以下命令");
+        System.out.println(shell);
+//        Process process = null;
+//        try {
+//            process = Runtime.getRuntime().exec(shell);
+//            printOutputStreamContent(process);
+//
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
 
+
+    }
+    public void printOutputStreamContent(Process proc) throws IOException {
+
+        BufferedReader stdInput = new BufferedReader(new
+                InputStreamReader(proc.getInputStream()));
+
+        BufferedReader stdError = new BufferedReader(new
+                InputStreamReader(proc.getErrorStream()));
+
+// Read the output from the command
+        System.out.println("Here is the standard output of the command:\n");
+        String s = null;
+        while ((s = stdInput.readLine()) != null) {
+            System.out.println(s);
+        }
+
+// Read any errors from the attempted command
+        System.out.println("Here is the standard error of the command (if any):\n");
+        while ((s = stdError.readLine()) != null) {
+            System.out.println(s);
+        }
+    }
     public void invoke(List<Triple<Class,Object, Method>> invoker){
         for (Triple<Class,Object,Method> p:invoker
         ) {
