@@ -38,11 +38,23 @@ import static org.reflections.Reflections.log;
 public class ThreadPoolTest implements CommandLineRunner {
     @Autowired
     ConfigurableApplicationContext context;
+    /**
+     * 1. 在刚刚建立起线程池，但是一次任务都没跑的时候，poolSize依旧为0.此时线程池内一个线程都没有
+     * 2. 在跑过任意线程以后，当所有的线程都跑完了，此时线程池中会保留corePoolSize数量的线程
+     */
     int corePoolSize = 1;
+    /**
+     * 1. 当池子中的线程,超过这个数值的时候，就会向队列里面丢
+     * 2. 即便所有线程都执行完了，池子中的线程数也不会马上回落到coreSize，而是要等到keepAliveTime的时间过了，才会回落到coresize
+     */
     int maximumPoolSize = 5;
+    /**
+     * 线程空闲多久时间，才可以回落到coreSize
+     */
     int keepAliveTime = 10;
     TimeUnit timeUnit = TimeUnit.SECONDS;
     BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(10, false);
+
     ThreadFactory threadFactory = new CustomDefThreadFactory("TestPool", true, 5);
     RejectedExecutionHandler rejectedExecutionHandler = new RejectedExecutionHandler() {
         @Override
@@ -65,7 +77,66 @@ public class ThreadPoolTest implements CommandLineRunner {
 
         }
     };
-    ExecutorService ex = new ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, timeUnit, workQueue, threadFactory, rejectedExecutionHandler);
+    public static class CustomDefThreadPoolExecutor extends ThreadPoolExecutor{
+
+        public CustomDefThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, @NotNull TimeUnit unit, @NotNull BlockingQueue<Runnable> workQueue, @NotNull ThreadFactory threadFactory, @NotNull RejectedExecutionHandler handler) {
+            super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory, handler);
+        }
+
+        @Override
+        protected void beforeExecute(Thread t, Runnable r) {
+            CustomDefThreadPoolExecutor e = this;
+            log.info(
+                    "beforeExecute ===>" +
+                            "ActiviteCount:{};" +
+                            "TaskCount:{};" +
+                            "PoolSize:{};" +
+                            "completedTask:{};" +
+                            "queueRemainCapcity:{};" +
+                            "queueSize:{};" +
+                            "MaxPoolSize:{}",
+                    e.getActiveCount(),
+                    e.getTaskCount(),
+                    e.getPoolSize(),
+                    e.getCompletedTaskCount(),
+                    e.getQueue().remainingCapacity(),
+                    e.getQueue().size(),
+                    e.getMaximumPoolSize()
+
+            );
+            super.beforeExecute(t, r);
+        }
+
+        @Override
+        protected void afterExecute(Runnable r, Throwable t) {
+            CustomDefThreadPoolExecutor e = this;
+            log.info(
+                    "afterExecute <===" +
+                            "ActiviteCount:{};" +
+                            "TaskCount:{};" +
+                            "PoolSize:{};" +
+                            "completedTask:{};" +
+                            "queueRemainCapcity:{};" +
+                            "queueSize:{};" +
+                            "MaxPoolSize:{}",
+                    e.getActiveCount(),
+                    e.getTaskCount(),
+                    e.getPoolSize(),
+                    e.getCompletedTaskCount(),
+                    e.getQueue().remainingCapacity(),
+                    e.getQueue().size(),
+                    e.getMaximumPoolSize()
+
+            );
+            super.afterExecute(r, t);
+        }
+
+        @Override
+        protected void terminated() {
+            super.terminated();
+        }
+    }
+    ExecutorService ex = new CustomDefThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, timeUnit, workQueue, threadFactory, rejectedExecutionHandler);
 
     public static void main(String[] args) {
 
@@ -141,7 +212,7 @@ public class ThreadPoolTest implements CommandLineRunner {
 
     @Scheduled(cron = "*/3 * * * * *")
     public void displayThreadPool() {
-        ThreadPoolExecutor e = (ThreadPoolExecutor) ex;
+        CustomDefThreadPoolExecutor e = (CustomDefThreadPoolExecutor) ex;
         log.info(
                         "ActiviteCount:{};" +
                         "TaskCount:{};" +
