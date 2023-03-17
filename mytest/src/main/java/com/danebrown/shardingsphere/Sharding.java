@@ -5,9 +5,11 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +37,8 @@ public class Sharding implements CommandLineRunner {
     @Autowired
     ShardingJDBC shardingJDBC;
 
+    @Autowired
+    ApplicationContext applicationContext;
     @Transactional
     @Override
     public void run(String... args) throws Exception {
@@ -43,7 +47,9 @@ public class Sharding implements CommandLineRunner {
         shardingJDBC.insert_reqnew();
         int i = 1/0;
         shardingJDBC.runsql();
+
     }
+    @Async
     @Configuration
     public static class ShardingStartup{
         @Bean

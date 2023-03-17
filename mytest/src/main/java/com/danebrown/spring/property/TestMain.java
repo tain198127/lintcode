@@ -31,7 +31,7 @@ public class TestMain implements CommandLineRunner, ApplicationListener<Applicat
     ApplicationContext applicationContext;
     public static void main(String[] args) {
         SpringApplication application = new SpringApplication(TestMain.class);
-        application.setWebApplicationType(WebApplicationType.NONE);
+//        application.setWebApplicationType(WebApplicationType.SERVLET);
         application.run(args);
     }
 
