@@ -9,6 +9,7 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.lang3.StringUtils;
 import org.bytedeco.opencv.presets.opencv_core;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.reflections.Reflections;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -23,12 +24,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 import java.lang.reflect.Field;
 import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 
 import static org.reflections.Reflections.log;
 
@@ -44,7 +43,7 @@ public class ThreadPoolTest implements CommandLineRunner {
      * 1. 在刚刚建立起线程池，但是一次任务都没跑的时候，poolSize依旧为0.此时线程池内一个线程都没有
      * 2. 在跑过任意线程以后，当所有的线程都跑完了，此时线程池中会保留corePoolSize数量的线程
      */
-    int corePoolSize = 1;
+    int corePoolSize = 2;
     /**
      * 1. 当池子中的线程,超过这个数值的时候，就会向队列里面丢
      * 2. 即便所有线程都执行完了，池子中的线程数也不会马上回落到coreSize，而是要等到keepAliveTime的时间过了，才会回落到coresize
@@ -55,7 +54,178 @@ public class ThreadPoolTest implements CommandLineRunner {
      */
     int keepAliveTime = 10;
     TimeUnit timeUnit = TimeUnit.SECONDS;
-    BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(10, false);
+    public class ReactorBlockQueue<T> extends ArrayBlockingQueue<T>{
+
+        public ReactorBlockQueue(int capacity) {
+            super(capacity);
+        }
+
+        public ReactorBlockQueue(int capacity, boolean fair) {
+            super(capacity, fair);
+        }
+
+        public ReactorBlockQueue(int capacity, boolean fair, Collection<? extends T> c) {
+            super(capacity, fair, c);
+        }
+
+        @Override
+        public boolean add(T t) {
+            log.info("add");
+            return super.add(t);
+        }
+
+        @Override
+        public boolean offer(T t) {
+//            log.info("before offer：size:{},remain:{},obj:{}",this.size(),this.remainingCapacity(),t);
+            boolean b=true;
+            try {
+                Thread.sleep(10);
+                b=  super.offer(t);
+                return b;
+            } catch (InterruptedException e) {
+
+            }
+            finally {
+                log.info("after offer：size:{},remain:{},result:{} obj:{},",this.size(),this.remainingCapacity(),b,t);
+                String msg = printThreadPoolInfo((ThreadPoolExecutor) ex);
+                log.info("after offer->"+msg);
+            }
+            return false;
+        }
+
+        @Override
+        public void put(T t) throws InterruptedException {
+            log.info("put");
+            super.put(t);
+        }
+
+        @Override
+        public boolean offer(T t, long timeout, TimeUnit unit) throws InterruptedException {
+//            log.info("before offer(timeout,unit)：size:{},remain:{},obj:{}",this.size(),this.remainingCapacity(),t);
+            boolean b = super.offer(t, timeout, unit);
+            log.info("after offer(t,timeout)：size:{},remain:{},result:{} obj:{},",this.size(),this.remainingCapacity(),b,t);
+            String msg = printThreadPoolInfo((ThreadPoolExecutor) ex);
+            log.info("after offer(t,timeout, timeunit)->"+msg);
+            return b;
+        }
+
+        @Override
+        public T poll() {
+
+            T t = super.poll();
+            log.info("poll:{}",t);
+            return t;
+        }
+
+        @Override
+        public T take() throws InterruptedException {
+
+            T t = super.take();
+            log.info("take:{}",t);
+            return t;
+        }
+
+        @Override
+        public T poll(long timeout, TimeUnit unit) throws InterruptedException {
+
+            T t=  super.poll(timeout, unit);
+            log.info("after poll(timeout, timeunit)：size:{},remain:{}, obj:{},",this.size(),this.remainingCapacity(),t);
+            String msg = printThreadPoolInfo((ThreadPoolExecutor) ex);
+            log.info("after poll(timeout, timeunit)->"+msg);
+            return t;
+        }
+
+        @Override
+        public T peek() {
+            log.info("peek");
+            return super.peek();
+        }
+
+        @Override
+        public int size() {
+//            log.info("size");
+            return super.size();
+        }
+
+        @Override
+        public int remainingCapacity() {
+//            log.info("remainingCapacity");
+            return super.remainingCapacity();
+        }
+
+        @Override
+        public boolean remove(Object o) {
+            log.info("remove");
+            return super.remove(o);
+        }
+
+        @Override
+        public boolean contains(Object o) {
+            log.info("contains");
+            return super.contains(o);
+        }
+
+        @Override
+        public void clear() {
+            log.info("clear");
+            super.clear();
+        }
+
+        @Override
+        public int drainTo(Collection<? super T> c) {
+            log.info("drainTo");
+            return super.drainTo(c);
+        }
+
+        @Override
+        public int drainTo(Collection<? super T> c, int maxElements) {
+            log.info("drainTo(col,max)");
+            return super.drainTo(c, maxElements);
+        }
+
+        @Override
+        public boolean removeIf(Predicate<? super T> filter) {
+            log.info("removeIf(fileter)");
+            return super.removeIf(filter);
+        }
+
+        @Override
+        public boolean removeAll(Collection<?> c) {
+            log.info("removeAll");
+            return super.removeAll(c);
+        }
+
+        @Override
+        public boolean retainAll(Collection<?> c) {
+            log.info("retainAll");
+            return super.retainAll(c);
+        }
+
+        @Override
+        public T remove() {
+            log.info("remove");
+            return super.remove();
+        }
+
+        @Override
+        public T element() {
+            log.info("element");
+            return super.element();
+        }
+
+        @Override
+        public boolean addAll(Collection<? extends T> c) {
+            log.info("addAll");
+            return super.addAll(c);
+        }
+
+        @Override
+        public boolean containsAll(@NotNull Collection<?> c) {
+            log.info("containsAll");
+            return super.containsAll(c);
+        }
+    }
+    BlockingQueue<Runnable> workQueue = new ReactorBlockQueue<>(10, false);
 
     ThreadFactory threadFactory = new CustomDefThreadFactory("TestPool", true, 5);
     RejectedExecutionHandler rejectedExecutionHandler = new RejectedExecutionHandler() {
@@ -79,6 +249,23 @@ public class ThreadPoolTest implements CommandLineRunner {
 
         }
     };
+    public static String printThreadPoolInfo(ThreadPoolExecutor e){
+        String msg = MessageFormat.format("ActiviteCount:{0};" +
+                        "TaskCount:{1};" +
+                        "PoolSize:{2};" +
+                        "completedTask:{3};" +
+                        "queueRemainCapcity:{4};" +
+                        "queueSize:{5};" +
+                        "MaxPoolSize:{6}",
+                e.getActiveCount(),
+                e.getTaskCount(),
+                e.getPoolSize(),
+                e.getCompletedTaskCount(),
+                e.getQueue().remainingCapacity(),
+                e.getQueue().size(),
+                e.getMaximumPoolSize());
+        return msg;
+    }
     public class CustomDefThreadPoolExecutor extends ThreadPoolExecutor{
 
         public CustomDefThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, @NotNull TimeUnit unit, @NotNull BlockingQueue<Runnable> workQueue, @NotNull ThreadFactory threadFactory, @NotNull RejectedExecutionHandler handler) {
@@ -88,58 +275,50 @@ public class ThreadPoolTest implements CommandLineRunner {
         @Override
         protected void beforeExecute(Thread t, Runnable r) {
             CustomDefThreadPoolExecutor e = this;
-            String msg = MessageFormat.format("ActiviteCount:{0};" +
-                            "TaskCount:{1};" +
-                            "PoolSize:{2};" +
-                            "completedTask:{3};" +
-                            "queueRemainCapcity:{4};" +
-                            "queueSize:{5};" +
-                            "MaxPoolSize:{6}",
-                    e.getActiveCount(),
-                    e.getTaskCount(),
-                    e.getPoolSize(),
-                    e.getCompletedTaskCount(),
-                    e.getQueue().remainingCapacity(),
-                    e.getQueue().size(),
-                    e.getMaximumPoolSize());
-            if(!lastThreadPoolInfo.equals(msg)){
-                lastThreadPoolInfo = msg;
-                log.info(
-                        "beforeExecute <===" +msg
-                );
+            String msg = printThreadPoolInfo(e);
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException exc) {
+
             }
+            log.info(
+                    "beforeExecute <===" +msg
+            );
             super.beforeExecute(t, r);
         }
 
         @Override
         protected void afterExecute(Runnable r, Throwable t) {
             CustomDefThreadPoolExecutor e = this;
-            String msg = MessageFormat.format("ActiviteCount:{0};" +
-                            "TaskCount:{1};" +
-                            "PoolSize:{2};" +
-                            "completedTask:{3};" +
-                            "queueRemainCapcity:{4};" +
-                            "queueSize:{5};" +
-                            "MaxPoolSize:{6}",
-                    e.getActiveCount(),
-                    e.getTaskCount(),
-                    e.getPoolSize(),
-                    e.getCompletedTaskCount(),
-                    e.getQueue().remainingCapacity(),
-                    e.getQueue().size(),
-                    e.getMaximumPoolSize());
-            if(!lastThreadPoolInfo.equals(msg)){
-                lastThreadPoolInfo = msg;
+            String msg = printThreadPoolInfo(e);
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException exc) {
+            }
+//            if(!lastThreadPoolInfo.equals(msg)){
+//                lastThreadPoolInfo = msg;
                 log.info(
                         "afterExecute <===" +msg
                 );
-            }
+//            }
 
             super.afterExecute(r, t);
         }
 
         @Override
         protected void terminated() {
+            CustomDefThreadPoolExecutor e = this;
+            String msg = printThreadPoolInfo(e);
+            try {
+                Thread.sleep(10);
+            } catch (InterruptedException exc) {
+            }
+//            if(!lastThreadPoolInfo.equals(msg)){
+//            lastThreadPoolInfo = msg;
+            log.info(
+                    "afterExecute <===" +msg
+            );
+//            }
             super.terminated();
         }
     }
@@ -191,7 +370,7 @@ public class ThreadPoolTest implements CommandLineRunner {
 
                                     @Override
                                     public String call() throws Exception {
-                                        FastThreadLocalThread.sleep(1000);
+                                        FastThreadLocalThread.sleep(2000);
                                         log.info("运行结束:name:{};age:{}",this.getName(),this.getAge());
                                         return UUID.randomUUID().toString();
                                     }
@@ -220,25 +399,11 @@ public class ThreadPoolTest implements CommandLineRunner {
     @Scheduled(cron = "*/1 * * * * *")
     public void displayThreadPool() {
         CustomDefThreadPoolExecutor e = (CustomDefThreadPoolExecutor) ex;
-        String msg = MessageFormat.format("ActiviteCount:{0};" +
-                        "TaskCount:{1};" +
-                        "PoolSize:{2};" +
-                        "completedTask:{3};" +
-                        "queueRemainCapcity:{4};" +
-                        "queueSize:{5};" +
-                        "MaxPoolSize:{6}",
-                e.getActiveCount(),
-                e.getTaskCount(),
-                e.getPoolSize(),
-                e.getCompletedTaskCount(),
-                e.getQueue().remainingCapacity(),
-                e.getQueue().size(),
-                e.getMaximumPoolSize());
-        log.info(msg);
-//        if(!lastThreadPoolInfo.equals(msg)) {
-//            lastThreadPoolInfo = msg;
-//            log.info(lastThreadPoolInfo);
-//        }
+        String msg = printThreadPoolInfo(e);
+        if(!lastThreadPoolInfo.equals(msg)) {
+            lastThreadPoolInfo = msg;
+            log.info(lastThreadPoolInfo);
+        }
     }
 
     public abstract static class CustomRunnable<T> implements Callable<T> {
@@ -266,11 +431,35 @@ public class ThreadPoolTest implements CommandLineRunner {
         }
     }
 
+    public class CustomDefThread extends Thread{
+        public CustomDefThread(ThreadGroup threadGroup, Runnable runnable, String s) {
+            super(threadGroup,runnable,s);
+        }
+
+        @Override
+        public synchronized void start() {
+            log.info("thread:{}-{} -> start  stat:{}",this.getThreadGroup().getName(),this.getName(),this.getState());
+            super.start();
+        }
+
+        @Override
+        public void run() {
+            log.info("thread:{}-{} -> run stat {}",this.getThreadGroup().getName(),this.getName(),this.getState());
+            super.run();
+        }
+
+        @Override
+        public void interrupt() {
+            log.info("interrupt:{}",this.getState());
+            super.interrupt();
+        }
+    }
+    private static final AtomicInteger poolId = new AtomicInteger();
     /**
      * 自定义的threadPool
      */
-    public static class CustomDefThreadFactory implements ThreadFactory {
-        private static final AtomicInteger poolId = new AtomicInteger();
+    public class CustomDefThreadFactory implements ThreadFactory {
+
         protected final ThreadGroup threadGroup;
         private final AtomicInteger nextId = new AtomicInteger();
         private final String prefix;
@@ -288,7 +477,9 @@ public class ThreadPoolTest implements CommandLineRunner {
 
         @Override
         public Thread newThread(@NotNull Runnable runnable) {
-            Thread t = new Thread(this.threadGroup, runnable, prefix + nextId.incrementAndGet());
+            CustomDefThread t = new CustomDefThread(this.threadGroup, runnable, prefix + nextId.incrementAndGet());
+//            Thread t = new Thread(this.threadGroup, runnable, prefix + nextId.incrementAndGet());
+
             try {
                 if (t.isDaemon() != this.daemon) {
                     t.setDaemon(this.daemon);
@@ -298,6 +489,9 @@ public class ThreadPoolTest implements CommandLineRunner {
                     t.setPriority(this.priority);
                 }
             } catch (Exception var4) {
+            }
+            finally {
+                log.info("group:{},name:{}",t.getThreadGroup().getName(),t.getName());
             }
 
             return t;
