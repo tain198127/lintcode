@@ -22,6 +22,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import java.lang.reflect.Field;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -36,6 +37,7 @@ import static org.reflections.Reflections.log;
 @EnableScheduling
 @EnableAsync
 public class ThreadPoolTest implements CommandLineRunner {
+    volatile String lastThreadPoolInfo = "";
     @Autowired
     ConfigurableApplicationContext context;
     /**
@@ -77,7 +79,7 @@ public class ThreadPoolTest implements CommandLineRunner {
 
         }
     };
-    public static class CustomDefThreadPoolExecutor extends ThreadPoolExecutor{
+    public class CustomDefThreadPoolExecutor extends ThreadPoolExecutor{
 
         public CustomDefThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, @NotNull TimeUnit unit, @NotNull BlockingQueue<Runnable> workQueue, @NotNull ThreadFactory threadFactory, @NotNull RejectedExecutionHandler handler) {
             super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory, handler);
@@ -86,48 +88,53 @@ public class ThreadPoolTest implements CommandLineRunner {
         @Override
         protected void beforeExecute(Thread t, Runnable r) {
             CustomDefThreadPoolExecutor e = this;
-            log.info(
-                    "beforeExecute ===>" +
-                            "ActiviteCount:{};" +
-                            "TaskCount:{};" +
-                            "PoolSize:{};" +
-                            "completedTask:{};" +
-                            "queueRemainCapcity:{};" +
-                            "queueSize:{};" +
-                            "MaxPoolSize:{}",
+            String msg = MessageFormat.format("ActiviteCount:{0};" +
+                            "TaskCount:{1};" +
+                            "PoolSize:{2};" +
+                            "completedTask:{3};" +
+                            "queueRemainCapcity:{4};" +
+                            "queueSize:{5};" +
+                            "MaxPoolSize:{6}",
                     e.getActiveCount(),
                     e.getTaskCount(),
                     e.getPoolSize(),
                     e.getCompletedTaskCount(),
                     e.getQueue().remainingCapacity(),
                     e.getQueue().size(),
-                    e.getMaximumPoolSize()
-
-            );
+                    e.getMaximumPoolSize());
+            if(!lastThreadPoolInfo.equals(msg)){
+                lastThreadPoolInfo = msg;
+                log.info(
+                        "beforeExecute <===" +msg
+                );
+            }
             super.beforeExecute(t, r);
         }
 
         @Override
         protected void afterExecute(Runnable r, Throwable t) {
             CustomDefThreadPoolExecutor e = this;
-            log.info(
-                    "afterExecute <===" +
-                            "ActiviteCount:{};" +
-                            "TaskCount:{};" +
-                            "PoolSize:{};" +
-                            "completedTask:{};" +
-                            "queueRemainCapcity:{};" +
-                            "queueSize:{};" +
-                            "MaxPoolSize:{}",
+            String msg = MessageFormat.format("ActiviteCount:{0};" +
+                            "TaskCount:{1};" +
+                            "PoolSize:{2};" +
+                            "completedTask:{3};" +
+                            "queueRemainCapcity:{4};" +
+                            "queueSize:{5};" +
+                            "MaxPoolSize:{6}",
                     e.getActiveCount(),
                     e.getTaskCount(),
                     e.getPoolSize(),
                     e.getCompletedTaskCount(),
                     e.getQueue().remainingCapacity(),
                     e.getQueue().size(),
-                    e.getMaximumPoolSize()
+                    e.getMaximumPoolSize());
+            if(!lastThreadPoolInfo.equals(msg)){
+                lastThreadPoolInfo = msg;
+                log.info(
+                        "afterExecute <===" +msg
+                );
+            }
 
-            );
             super.afterExecute(r, t);
         }
 
@@ -210,26 +217,28 @@ public class ThreadPoolTest implements CommandLineRunner {
 
     }
 
-    @Scheduled(cron = "*/3 * * * * *")
+    @Scheduled(cron = "*/1 * * * * *")
     public void displayThreadPool() {
         CustomDefThreadPoolExecutor e = (CustomDefThreadPoolExecutor) ex;
-        log.info(
-                        "ActiviteCount:{};" +
-                        "TaskCount:{};" +
-                        "PoolSize:{};" +
-                        "completedTask:{};" +
-                        "queueRemainCapcity:{};" +
-                        "queueSize:{};" +
-                        "MaxPoolSize:{}",
+        String msg = MessageFormat.format("ActiviteCount:{0};" +
+                        "TaskCount:{1};" +
+                        "PoolSize:{2};" +
+                        "completedTask:{3};" +
+                        "queueRemainCapcity:{4};" +
+                        "queueSize:{5};" +
+                        "MaxPoolSize:{6}",
                 e.getActiveCount(),
                 e.getTaskCount(),
                 e.getPoolSize(),
                 e.getCompletedTaskCount(),
                 e.getQueue().remainingCapacity(),
                 e.getQueue().size(),
-                e.getMaximumPoolSize()
-
-        );
+                e.getMaximumPoolSize());
+        log.info(msg);
+//        if(!lastThreadPoolInfo.equals(msg)) {
+//            lastThreadPoolInfo = msg;
+//            log.info(lastThreadPoolInfo);
+//        }
     }
 
     public abstract static class CustomRunnable<T> implements Callable<T> {
