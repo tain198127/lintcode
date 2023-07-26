@@ -6,11 +6,8 @@ import org.openjdk.jol.info.ClassLayout;
 import org.openjdk.jol.info.GraphLayout;
 
 import java.lang.instrument.Instrumentation;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Supplier;
 
 
 /**
@@ -29,10 +26,12 @@ public class JOLTest {
     public static void printObjSize(Object object, String mesg) {
         ClassLayout classLayout = ClassLayout.parseInstance(object);
         GraphLayout graphLayout = GraphLayout.parseInstance(object);
+
         System.out.println(mesg);
         System.out.println("all size ["+graphLayout.totalSize()+"] bytes");
         System.out.println("head size ["+classLayout.headerSize()+"]");
-        System.out.println("content size ["+(graphLayout.totalSize()-classLayout.headerSize())+"]");
+        System.out.println("content size ["+(graphLayout.totalSize()-classLayout.headerSize())+"] bytes");
+        System.out.println("content size ["+(graphLayout.totalSize()-classLayout.headerSize())/(1024*1024)+"] MB");
 
         if(graphLayout.totalSize() <= 100) {
             System.out.println("struct:↓");
@@ -145,21 +144,30 @@ public class JOLTest {
         Map<String,Map<String,Object>> inhericMap= new HashMap<>();
         inhericMap.put(firstMapIdx,new HashMap<>());
         inhericMap.put(secondMapIdx,new HashMap<>());
+        Supplier<String> generate = new Supplier<String>() {
+            @Override
+            public String get() {
+
+                String string = UUID.randomUUID().toString()+UUID.randomUUID().toString()+UUID.randomUUID().toString()+UUID.randomUUID().toString();
+                return string;
+            }
+        };
+        String conenteLength = generate.get();
         for(int i =0; i < len;i++){
-            arrayList.add(new Object());
-            map.put(String.valueOf(i),new Object());
-            array[i] = new Object();
+            arrayList.add(generate.get());
+            map.put(String.valueOf(i),generate.get());
+            array[i] = generate.get();
             if(i < len/2){
-                inhericMap.get(firstMapIdx).put(String.valueOf(i),new Object());
+                inhericMap.get(firstMapIdx).put(String.valueOf(i),generate.get());
             }else{
                 inhericMap.get(secondMapIdx).put(String.valueOf(i),
-                        new Object());
+                        generate.get());
             }
         }
-        printObjSize(arrayList,len+"数据量arraylist 对象大小");
-        printObjSize(map,len+"数据量 map 对象大小");
-        printObjSize(array,len+"数据量 数组对象大小");
-        printObjSize(inhericMap,len+"数据量 二级map对象大小");
+        printObjSize(arrayList,len+"条数据量arraylist 对象大小,每个元素字符长度:"+conenteLength.length());
+        printObjSize(map,len+"条数据量 map 对象大小,每个元素字符长度:"+conenteLength.length());
+        printObjSize(array,len+"条数据量 数组对象大小,每个元素字符长度："+conenteLength.length());
+        printObjSize(inhericMap,len+"条数据量 二级map对象大小，每个元素字符长度:"+conenteLength.length());
 
 
     }
