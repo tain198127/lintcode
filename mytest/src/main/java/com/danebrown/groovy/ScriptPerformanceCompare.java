@@ -11,19 +11,20 @@ import org.apache.commons.jexl2.MapContext;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.mvel2.MVEL;
-import org.springframework.expression.EvaluationContext;
+import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.infra.Blackhole;
+import org.openjdk.jmh.results.format.ResultFormatType;
+import org.openjdk.jmh.runner.Runner;
+import org.openjdk.jmh.runner.RunnerException;
+import org.openjdk.jmh.runner.options.Options;
+import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.springframework.expression.Expression;
-import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**
@@ -32,171 +33,254 @@ import java.util.function.Consumer;
  *
  * @author danebrown
  */
+@BenchmarkMode(Mode.All)
+@Warmup(iterations = 2, time = 1)
+@Measurement(iterations = 3, time = 2)
+@Threads(4)
+@Fork(1)
+@State(value = Scope.Benchmark)
+@OutputTimeUnit(TimeUnit.NANOSECONDS)
 public class ScriptPerformanceCompare {
+    public static JexlEngine jexlEngine = new JexlEngine();
     private static Serializable s;
-    private static String shell ="child.child.thirdMap.thirdName";
-    private static String groovy = "return topObj."+shell;
+    private static String shell = "child.child.thirdMap.thirdName";
+    private static String groovy = "return topObj." + shell;
+    private static SpelExpressionParser parser = new SpelExpressionParser();
+
+    private static String spelExp = "child.child.thirdMap['thirdName']";
+
+    private static String jexlExp = "topObj.child.child.thirdName";
+
     static {
         s = MVEL.compileExpression(shell);
     }
+
+    public static TopObj generateObj() {
+        TopObj topObj = new TopObj();
+        topObj.firstList.add("firstList" + UUID.randomUUID().toString());
+        topObj.firstMap.put("topName", "shakyri" + UUID.randomUUID().toString());
+        topObj.topIdx = ThreadLocalRandom.current().nextInt();
+        topObj.topName = "topName" + UUID.randomUUID().toString();
+
+        topObj.child.secondIdx = ThreadLocalRandom.current().nextInt();
+        topObj.child.secondName = "secondName" + UUID.randomUUID().toString();
+        topObj.child.secondList.add("secondList" + UUID.randomUUID().toString());
+        topObj.child.secondMap.put("secondName", "maskov" + UUID.randomUUID().toString());
+
+        topObj.child.child.thirdIdx = ThreadLocalRandom.current().nextInt();
+        topObj.child.child.thirdName = "thirdName" + UUID.randomUUID().toString();
+        topObj.child.child.thirdList.add("thirdList" + UUID.randomUUID().toString());
+        topObj.child.child.thirdMap.put("thirdName", "brown" + UUID.randomUUID().toString());
+
+        return topObj;
+    }
+
+    public static Object groovyPrint(Object topObj, String shell,
+                                     Consumer<Long> before,
+                                     Consumer<Triple<String,Long,Object> > after) {
+
+        long start = System.currentTimeMillis();
+        if (before != null) {
+            before.accept(start);
+        }
+        Binding binding = new Binding();
+        binding.setVariable("topObj", topObj);
+        GroovyShell groovyShell = new GroovyShell(binding);
+        Object val = groovyShell.evaluate(groovy);
+        if (after != null) {
+            long result = System.currentTimeMillis() - start;
+            Triple<String,Long,Object> triple = Triple.of("groovy",result,val);
+            after.accept(triple);
+        }
+        return val;
+    }
+
+    public static Object onglTest(Object topObj, String shell,
+                                  Consumer<Long> before,
+                                  Consumer<Triple<String,Long,Object> > after) throws OgnlException {
+
+
+        long start = System.currentTimeMillis();
+        if (before != null) {
+            before.accept(start);
+        }
+        Object val = Ognl.getValue(shell, topObj);
+        if (after != null) {
+            long result = System.currentTimeMillis() - start;
+            Triple<String,Long,Object> triple = Triple.of("ongl",result,val);
+            after.accept(triple);
+        }
+        return val;
+
+
+    }
+
+    public static Object spelTest(Object topObj, String shell,
+                                  Consumer<Long> before,
+                                  Consumer<Triple<String,Long,Object>> after) {
+
+//        long start = System.currentTimeMillis();
+        long start = System.currentTimeMillis();
+        if (before != null) {
+            before.accept(start);
+        }
+        Expression thirdNameExp = parser.parseExpression(shell);
+        String val = thirdNameExp.getValue(topObj, String.class);
+        if (after != null) {
+            long result = System.currentTimeMillis() - start;
+            Triple<String,Long,Object> triple = Triple.of("spel",result,val);
+            after.accept(triple);
+        }
+        return val;
+    }
+
+    public static Object mvelTest(Object topObj, Serializable shell,
+                                  Consumer<Long> before,
+                                  Consumer<Triple<String,Long,Object>> after) {
+
+
+        long start = System.currentTimeMillis();
+        if (before != null) {
+            before.accept(start);
+        }
+
+        Object val = MVEL.executeExpression(shell, topObj);
+        if (after != null) {
+            long result = System.currentTimeMillis() - start;
+            Triple<String,Long,Object> triple = Triple.of("mvel",result,val);
+            after.accept(triple);
+        }
+        return val;
+    }
+
+    public static Object jexlTest(Object topObj, String shell,
+                                  Consumer<Long> before,
+                                  Consumer<Triple<String,Long,Object>> after) {
+        long start = System.currentTimeMillis();
+        if (before != null) {
+            before.accept(start);
+        }
+
+        org.apache.commons.jexl2.Expression expression = jexlEngine.createExpression(shell);
+        JexlContext jexlContext = new MapContext();
+
+        jexlContext.set("topObj", topObj);
+        Object val = expression.evaluate(jexlContext);
+        if (after != null) {
+            long result = System.currentTimeMillis() - start;
+            Triple<String,Long,Object> triple = Triple.of("jexl",result,val);
+            after.accept(triple);
+        }
+        return val;
+
+    }
+
+//    static Consumer<Long> begin = aLong -> System.out.println("开始时间:" + aLong);
+    static Consumer<Long> begin = null;
+//    static Consumer<Triple<String, Long,Object>> finish = triple -> System.out.println(triple.getLeft()+"耗时:" + triple.getMiddle() + "毫秒,值为" + triple.getRight());
+
+    static Consumer<Triple<String, Long,Object>> finish = null;
+
+    @Benchmark
+    public static void groovyTestAccessor(Blackhole blackhole){
+        TopObj topObj = generateObj();
+        blackhole.consume(groovyPrint(topObj, shell, begin, finish));
+    }
+    @Benchmark
+    public static void onglTestAccessor(Blackhole blackhole) throws OgnlException {
+        TopObj topObj = generateObj();
+        blackhole.consume(onglTest(topObj, shell, begin, finish));
+    }
+    @Benchmark
+    public static void spelTestAccessor(Blackhole blackhole){
+
+        TopObj topObj = generateObj();
+        blackhole.consume(spelTest(topObj, spelExp, begin, finish));
+    }
+//    @Benchmark
+    public static void mvelTestAccessor(Blackhole blackhole){
+        TopObj topObj = generateObj();
+        blackhole.consume(mvelTest(topObj, s, begin, finish));
+
+    }
+    @Benchmark
+    public static void jexlTestAccessor(Blackhole blackhole){
+        TopObj topObj = generateObj();
+        blackhole.consume(jexlTest(topObj, jexlExp, begin, finish));
+    }
+
+    public static void main(String[] args) throws OgnlException, RunnerException {
+//        groovyTestAccessor();
+//        onglTestAccessor();
+//        spelTestAccessor();
+//        mvelTestAccessor();
+//        jexlTestAccessor();
+
+        Options opt = new OptionsBuilder()
+                .include(ScriptPerformanceCompare.class.getSimpleName())
+                .result("result.json")
+                .resultFormat(ResultFormatType.JSON).build();
+        new Runner(opt).run();
+//        TopObj topObj = generateObj();
+//        groovyPrint(topObj, shell, begin, finish);
+//        topObj = generateObj();
+//        groovyPrint(topObj, shell, begin, finish);
+//        topObj = generateObj();
+//        groovyPrint(topObj, shell, begin, finish);
+//        System.out.println("===");
+//        topObj = generateObj();
+//        onglTest(topObj, shell, begin, finish);
+//        topObj = generateObj();
+//        onglTest(topObj, shell, begin, finish);
+//        topObj = generateObj();
+//        onglTest(topObj, shell, begin, finish);
+//        System.out.println("===");
+//        topObj = generateObj();
+//        String spelExp = "child.child.thirdMap['thirdName']";
+//        spelTest(topObj, spelExp, begin, finish);
+//        topObj = generateObj();
+//        spelTest(topObj, spelExp, begin, finish);
+//        topObj = generateObj();
+//        spelTest(topObj, spelExp, begin, finish);
+//        System.out.println("===");
+//        topObj = generateObj();
+//        mvelTest(topObj, s, begin, finish);
+//        topObj = generateObj();
+//        mvelTest(topObj, s, begin, finish);
+//        topObj = generateObj();
+//        mvelTest(topObj, s, begin, finish);
+//        System.out.println("===");
+//        topObj = generateObj();
+//        jexlTest(topObj, "topObj.child.child.thirdName", begin, finish);
+//        topObj = generateObj();
+//        jexlTest(topObj, "topObj.child.child.thirdName", begin, finish);
+//        topObj = generateObj();
+//        jexlTest(topObj, "topObj.child.child.thirdName", begin, finish);
+    }
+
     @Data
-    public static class TopObj{
+    public static class TopObj {
         private SecondObj child = new SecondObj();
         private String topName;
         private int topIdx;
         private List<String> firstList = new ArrayList<>();
         private Map<String, String> firstMap = new HashMap<>();
     }
+
     @Data
-    public static class SecondObj{
+    public static class SecondObj {
         private ThirdObj child = new ThirdObj();
         private String secondName;
         private int secondIdx;
-        private Map<String,String> secondMap = new HashMap<>();
+        private Map<String, String> secondMap = new HashMap<>();
         private List<String> secondList = new ArrayList<>();
     }
+
     @Data
-    public static class ThirdObj{
+    public static class ThirdObj {
         private String thirdName;
         private int thirdIdx;
         private List<String> thirdList = new ArrayList<>();
-        private Map<String,String> thirdMap = new HashMap<>();
-    }
-    public static TopObj generateObj(){
-        TopObj topObj = new TopObj();
-        topObj.firstList.add("firstList"+ UUID.randomUUID().toString());
-        topObj.firstMap.put("topName","shakyri"+ UUID.randomUUID().toString());
-        topObj.topIdx = ThreadLocalRandom.current().nextInt();
-        topObj.topName="topName"+ UUID.randomUUID().toString();
-
-        topObj.child.secondIdx = ThreadLocalRandom.current().nextInt();
-        topObj.child.secondName="secondName"+ UUID.randomUUID().toString();
-        topObj.child.secondList.add("secondList"+ UUID.randomUUID().toString());
-        topObj.child.secondMap.put("secondName","maskov"+ UUID.randomUUID().toString());
-
-        topObj.child.child.thirdIdx=ThreadLocalRandom.current().nextInt();
-        topObj.child.child.thirdName = "thirdName"+ UUID.randomUUID().toString();
-        topObj.child.child.thirdList.add("thirdList"+ UUID.randomUUID().toString());
-        topObj.child.child.thirdMap.put("thirdName","brown"+ UUID.randomUUID().toString());
-
-        return topObj;
-    }
-    public static long groovyPrint(Object topObj, String shell,
-                                   Consumer<Long> before,
-                                   Consumer<Pair<Long,Object>> after){
-
-        long start = System.currentTimeMillis();
-        Binding binding = new Binding();
-        binding.setVariable("topObj",topObj);
-        GroovyShell groovyShell = new GroovyShell(binding);
-        Object val = groovyShell.evaluate(groovy);
-        long end = System.currentTimeMillis();
-        long result = end-start;
-        System.out.println("groovyPrint耗时:"+result+"毫秒，值是"+val);
-
-        return result;
-    }
-
-    public static long onglTest(Object topObj, String shell,
-                                Consumer<Long> before,
-                                Consumer<Pair<Long,Object>> after) throws OgnlException {
-
-        long start = System.currentTimeMillis();
-
-        Object val = Ognl.getValue(shell,topObj);
-        long end = System.currentTimeMillis();
-        long result = end-start;
-
-        System.out.println("onglTest耗时:"+result+"毫秒，值是"+val);
-        return result;
-
-    }
-
-    public static long spelTest(Object topObj, String shell,
-                                Consumer<Long> before,
-                                Consumer<Pair<Long,Object>> after){
-
-        long start = System.currentTimeMillis();
-        EvaluationContext context = new StandardEvaluationContext(topObj);
-        ExpressionParser methodCall = new SpelExpressionParser();
-        Expression methodExpr = methodCall.parseExpression(shell);
-        Object val =  methodExpr.getValue(context);
-        long end = System.currentTimeMillis();
-        long result = end-start;
-
-        System.out.println("spelTest耗时:"+result+"毫秒,值为"+val);
-        return result;
-    }
-
-    public static long mvelTest(Object topObj, Serializable shell,
-                                Consumer<Long> before,
-                                Consumer<Pair<Long,Object>> after){
-
-
-        long start = System.currentTimeMillis();
-
-
-        Object val = MVEL.executeExpression(shell,topObj);
-
-        long end = System.currentTimeMillis();
-        long result = end-start;
-
-        System.out.println("mvelTest耗时:"+result+"毫秒,值为"+val);
-        return result;
-    }
-
-    public static long jexlTest(Object topObj, String shell,
-                                Consumer<Long> before,
-                                Consumer<Pair<Long,Object>> after){
-        long start = System.currentTimeMillis();
-
-
-        JexlEngine jexlEngine = new JexlEngine();
-        org.apache.commons.jexl2.Expression expression = jexlEngine.createExpression(shell);
-        JexlContext jexlContext = new MapContext();
-
-        jexlContext.set("topObj",topObj);
-        Object val = expression.evaluate(jexlContext);
-        long end = System.currentTimeMillis();
-        long result = end-start;
-
-        System.out.println("jexlTest耗时:"+result+"毫秒,值为"+val);
-        return result;
-    }
-    public static void main(String[] args) throws OgnlException {
-        TopObj topObj = generateObj();
-        groovyPrint(topObj,shell,null,null);
-        topObj = generateObj();
-        groovyPrint(topObj,shell,null,null);
-        topObj = generateObj();
-        groovyPrint(topObj,shell,null,null);
-        System.out.println("===");
-        topObj = generateObj();
-        onglTest(topObj,shell,null,null);
-        topObj = generateObj();
-        onglTest(topObj,shell,null,null);
-        topObj = generateObj();
-        onglTest(topObj,shell,null,null);
-        System.out.println("===");
-//        topObj = generateObj();
-//        spelTest(topObj,shell,null,null);
-//        topObj = generateObj();
-//        spelTest(topObj,shell,null,null);
-//        topObj = generateObj();
-//        spelTest(topObj,shell,null,null);
-//        System.out.println("===");
-        topObj = generateObj();
-        mvelTest(topObj,s,null,null);
-        topObj = generateObj();
-        mvelTest(topObj,s,null,null);
-        topObj = generateObj();
-        mvelTest(topObj,s,null,null);
-        System.out.println("===");
-        topObj = generateObj();
-        jexlTest(topObj,"topObj.child.child.thirdName",null,null);
-        topObj = generateObj();
-        jexlTest(topObj,"topObj.child.child.thirdName",null,null);
-        topObj = generateObj();
-        jexlTest(topObj,"topObj.child.child.thirdName",null,null);
+        private Map<String, String> thirdMap = new HashMap<>();
     }
 }

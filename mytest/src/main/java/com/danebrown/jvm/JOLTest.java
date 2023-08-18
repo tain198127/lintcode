@@ -1,12 +1,16 @@
 package com.danebrown.jvm;
 
+import com.danebrown.jvm.customlist.BlockList;
+import com.danebrown.jvm.customlist.IndexList;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.bytedeco.opencv.presets.opencv_core;
 import org.openjdk.jol.info.ClassLayout;
 import org.openjdk.jol.info.GraphLayout;
 
 import java.lang.instrument.Instrumentation;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 
 
@@ -93,6 +97,7 @@ public class JOLTest {
     public static class InheriteMixInnerMap extends MixInnerMap{
         private String testAge;
     }
+    public static char[] chatPool = new char[26*2];
     public static void main(String[] args) {
 
         int[][] multiDimArr = new int[128][2];
@@ -139,24 +144,40 @@ public class JOLTest {
         String firstMapIdx = "1";
         String secondMapIdx = "2";
         ArrayList<Object> arrayList = new ArrayList<Object>();
+        BlockList<String> blockList = new BlockList<>();
+        IndexList indexList = new IndexList(len);
         Map<String,Object> map = new HashMap<>();
         Object[] array = new Object[len];
         Map<String,Map<String,Object>> inhericMap= new HashMap<>();
         inhericMap.put(firstMapIdx,new HashMap<>());
         inhericMap.put(secondMapIdx,new HashMap<>());
+        for(int i = 0; i < 26;i++){
+            chatPool[i] = (char)((int)'a'+i);
+        }
+        for(int i = 26; i < 52;i++){
+            chatPool[i] = (char)((int)'A'+i-26);
+        }
+
         Supplier<String> generate = new Supplier<String>() {
             @Override
             public String get() {
-
-                String string = UUID.randomUUID().toString()+UUID.randomUUID().toString()+UUID.randomUUID().toString()+UUID.randomUUID().toString();
-                return string;
+                StringBuilder stringBuilder = new StringBuilder();
+                for(int i=0;i < 1000;i++){
+                    char c = chatPool[ThreadLocalRandom.current().nextInt(0,52)];
+                    stringBuilder.append(c);
+                }
+//                String string = UUID.randomUUID().toString()+UUID.randomUUID().toString()+UUID.randomUUID().toString()+UUID.randomUUID().toString();
+//                return string;
+                return stringBuilder.toString();
             }
         };
-        String conenteLength = generate.get();
+        String content = generate.get();
         for(int i =0; i < len;i++){
             arrayList.add(generate.get());
             map.put(String.valueOf(i),generate.get());
             array[i] = generate.get();
+            blockList.add(generate.get());
+
             if(i < len/2){
                 inhericMap.get(firstMapIdx).put(String.valueOf(i),generate.get());
             }else{
@@ -164,10 +185,11 @@ public class JOLTest {
                         generate.get());
             }
         }
-        printObjSize(arrayList,len+"条数据量arraylist 对象大小,每个元素字符长度:"+conenteLength.length());
-        printObjSize(map,len+"条数据量 map 对象大小,每个元素字符长度:"+conenteLength.length());
-        printObjSize(array,len+"条数据量 数组对象大小,每个元素字符长度："+conenteLength.length());
-        printObjSize(inhericMap,len+"条数据量 二级map对象大小，每个元素字符长度:"+conenteLength.length());
+        printObjSize(arrayList,len+"条数据量arraylist 每个元素字符长度:"+content.length()+"字符");
+        printObjSize(map,len+"条数据量 map 每个元素字符长度:"+content.length()+"字符");
+        printObjSize(array,len+"条数据量 数组 每个元素字符长度："+content.length()+"字符");
+        printObjSize(inhericMap,len+"条数据量 二级map 每个元素字符长度:"+content.length()+"字符");
+        printObjSize(blockList,len+"条数据量 自研blocklist 每个元素字符长度:"+content.length()+"字符");
 
 
     }

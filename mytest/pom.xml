@@ -472,6 +472,16 @@
             <artifactId>ignite-aop</artifactId>
             <version>${ignite.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-core</artifactId>
+            <version>1.36</version>
+        </dependency>
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-generator-annprocess</artifactId>
+            <version>1.36</version>
+        </dependency>
 <!--        <dependency>-->
 <!--            <groupId>org.apache.ignite</groupId>-->
 <!--            <artifactId>ignite-direct-io</artifactId>-->
