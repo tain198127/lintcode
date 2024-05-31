@@ -45,7 +45,7 @@ public class Sharding implements CommandLineRunner {
         shardingJDBC.insert();
 //        shardingJDBC.insert_nest();
         shardingJDBC.insert_reqnew();
-        int i = 1/0;
+//        int i = 1/0;
         shardingJDBC.runsql();
 
     }

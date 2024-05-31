@@ -1,13 +1,16 @@
 package com.danebrown.jvm;
 
+import com.danebrown.json.JsonMapper;
 import com.danebrown.jvm.customlist.BlockList;
 import com.danebrown.jvm.customlist.IndexList;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.bytedeco.opencv.presets.opencv_core;
 import org.openjdk.jol.info.ClassLayout;
 import org.openjdk.jol.info.GraphLayout;
 
+import java.io.File;
 import java.lang.instrument.Instrumentation;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -97,9 +100,20 @@ public class JOLTest {
     public static class InheriteMixInnerMap extends MixInnerMap{
         private String testAge;
     }
+    
     public static char[] chatPool = new char[26*2];
     public static void main(String[] args) {
 
+        byte[] testByte = new byte[10240000];
+        for (int i = 0; i < testByte.length; i++) {
+            testByte[i] = (byte) ThreadLocalRandom.current().nextInt(0, 127);
+        }
+        printObjSize(testByte, testByte.length+"长度的byte数组占用内存大小");
+        
+        String byte2StringTest = JsonMapper.allFieldMapper().toJson(testByte);
+        
+        printObjSize(byte2StringTest, testByte.length+"长度的byte数组转换为字符串后占用内存大小");
+        
         int[][] multiDimArr = new int[128][2];
         for (int i = 0; i < multiDimArr.length; i++) {
             Arrays.fill(multiDimArr[i], 1);

@@ -52,7 +52,7 @@ public class ScriptPerformanceCompare {
     private static String jexlExp = "topObj.child.child.thirdName";
 
     static {
-        s = MVEL.compileExpression(shell);
+//        s = MVEL.compileExpression(shell);
     }
 
     public static TopObj generateObj() {
@@ -197,7 +197,7 @@ public class ScriptPerformanceCompare {
         TopObj topObj = generateObj();
         blackhole.consume(spelTest(topObj, spelExp, begin, finish));
     }
-//    @Benchmark
+    @Benchmark
     public static void mvelTestAccessor(Blackhole blackhole){
         TopObj topObj = generateObj();
         blackhole.consume(mvelTest(topObj, s, begin, finish));
@@ -215,7 +215,8 @@ public class ScriptPerformanceCompare {
 //        spelTestAccessor();
 //        mvelTestAccessor();
 //        jexlTestAccessor();
-
+//        TopObj topObj = generateObj();
+//        mvelTest(topObj, s, begin, finish);
         Options opt = new OptionsBuilder()
                 .include(ScriptPerformanceCompare.class.getSimpleName())
                 .result("result.json")
