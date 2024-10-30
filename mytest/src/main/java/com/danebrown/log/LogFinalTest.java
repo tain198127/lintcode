@@ -1,5 +1,6 @@
 package com.danebrown.log;
 
+import lombok.extern.log4j.Log4j2;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -16,8 +17,9 @@ import java.util.concurrent.CountDownLatch;
  *
  * @author danebrown
  */
+//@SpringBootApplication(scanBasePackages = {"com.danebrown.log"})
 @SpringBootApplication
-@Slf4j
+@Log4j2
 public class LogFinalTest implements CommandLineRunner {
     @Autowired
     AsyncLogProcess asyncLogProcess;

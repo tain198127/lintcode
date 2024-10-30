@@ -95,9 +95,9 @@
 
         <AsyncRoot level="INFO" includeLocation="true">
 
-            <AppenderRef ref="Console"/>
-            <AppenderRef ref="route"/>
-<!--            <AppenderRef ref="Async"/>-->
+<!--            <AppenderRef ref="Console"/>-->
+<!--            <AppenderRef ref="route"/>-->
+            <AppenderRef ref="Async"/>
 
         </AsyncRoot>
 <!--        <AsyncLogger name="com.danebrown.log" level="INFO" additivity="false" includeLocation="false">-->

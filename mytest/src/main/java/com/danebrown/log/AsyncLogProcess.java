@@ -21,16 +21,16 @@ public class AsyncLogProcess {
     public void runLog(int times){
 
         for (int i = 0; i < times; i++) {
-            ThreadContext.putIfNull("logFileName","AsyncLogProcess");
+//            ThreadContext.putIfNull("logFileName","AsyncLogProcess");
             log.info(marker,"AsyncLogProcess info :{}",i);
-            ThreadContext.remove("logFileName");
+//            ThreadContext.remove("logFileName");
         }
     }
     public void runDebugLog(int times){
         for (int i = 0; i < times; i++) {
-            ThreadContext.putIfNull("logFileName","AsyncLogProcess");
+//            ThreadContext.putIfNull("logFileName","AsyncLogProcess");
             log.debug(marker,"AsyncLogProcess debug :{}",i);
-            ThreadContext.remove("logFileName");
+//            ThreadContext.remove("logFileName");
 
         }
     }

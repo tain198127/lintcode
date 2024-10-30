@@ -19,17 +19,17 @@ public class JCToolLogProcess {
 
     public void runLog(int times) {
         for (int i = 0; i < times; i++) {
-            ThreadContext.putIfNull("logFileName", "JCToolLogProcess");
+//            ThreadContext.putIfNull("logFileName", "JCToolLogProcess");
             log.info(marker, "JCToolLogProcess info :{}", i);
-            ThreadContext.remove("logFileName");
+//            ThreadContext.remove("logFileName");
         }
     }
 
     public void runDebugLog(int times) {
         for (int i = 0; i < times; i++) {
-            ThreadContext.putIfNull("logFileName", "SyncLogProcess");
+//            ThreadContext.putIfNull("logFileName", "SyncLogProcess");
             log.debug(marker, "SyncLogProcess debug :{}", i);
-            ThreadContext.remove("logFileName");
+//            ThreadContext.remove("logFileName");
         }
 
     }
