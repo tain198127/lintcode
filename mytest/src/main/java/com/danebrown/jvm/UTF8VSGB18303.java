@@ -1,36 +1,96 @@
 package com.danebrown.jvm;
 
+import org.springframework.util.ResourceUtils;
+
+import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 
 public class UTF8VSGB18303 {
 
+    public static void printAllCharactersets(){
+                Charset.availableCharsets().forEach(new BiConsumer<String, Charset>() {
+            @Override
+            public void accept(String s, Charset charset) {
+                String name = charset.name();
+                if(charset.aliases()!=null && !charset.aliases().isEmpty()){
+                    name = charset.aliases().stream().findFirst().get();
+                }
+                System.out.println(String.format("name:%s,charset:%s",s,name));
+            }
+        });
+    }
 
-    public static void main(String[] args) {
+    public static final void printEnv(){
+        System.out.println("<====环境信息====>");
+        Charset gb18030Charset = Charset.forName("GB18030");
+        System.out.println(String.format("GB10380版本:%s",gb18030Charset.aliases().stream().findFirst().get()));
+        Charset utf8Charset = Charset.forName("UTF-8");
+        System.out.println(String.format("UTF-8版本:%s",utf8Charset.aliases().stream().findFirst().get()));
+        System.out.println(String.format("jdk版本:%s",System.getProperty("java.version")));
+        System.out.println(String.format("操作系统版本:%s",System.getProperty("os.name")));
+        System.out.println("<====环境信息====>");
+
+    }
+
+    public static Set<String> readFromResource(String filename) {
+        Set<String> result =new HashSet<>();
+        File file = null;
+        try {
+            file = ResourceUtils.getFile("classpath:"+filename);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        BufferedReader bufferedReader = null;
+        try {
+            bufferedReader = new BufferedReader(new FileReader(file));
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
+        String line = null;
+        try {
+            while ((line = bufferedReader.readLine()) != null) {
+                result.add(line.trim());
+            }
+        }catch (IOException exception){
+            throw new RuntimeException(exception);
+        }
+        return result;
+    }
+    public static void main(String[] args) throws UnsupportedEncodingException {
+//        printAllCharactersets();
+        printEnv();
+
+
+        System.out.println("<===全字符对比===>");
         Set<String> allutf8 = genAllUtf8();
         Set<String> allGB18030 =genAllGB18030();
-        Set<String> onlyAllUtf8 = new HashSet<>();
-        Set<String> onlyAllGB18030 = new HashSet<>();
-        onlyAllUtf8.addAll(allutf8);
-        onlyAllUtf8.removeAll(allGB18030);
 
-        onlyAllGB18030.addAll(allGB18030);
-        onlyAllGB18030.removeAll(allutf8);
+        System.out.println("\n=============================\n");
+//        Set<String> onlyAllUtf8 = new HashSet<>();
+//        Set<String> onlyAllGB18030 = new HashSet<>();
+//        onlyAllUtf8.addAll(allutf8);
+//        onlyAllUtf8.removeAll(allGB18030);
+//
+//        onlyAllGB18030.addAll(allGB18030);
+//        onlyAllGB18030.removeAll(allutf8);
+//
+//        System.out.println("全字符对比");
+//        System.out.println("只在gb18030中出现的字符有:" + onlyAllGB18030.size() + "个,分别是:");
+//        onlyAllGB18030.stream().forEach(item -> System.out.print(item));
+//        System.out.println();
+//        System.out.println("只在UTF8中出现的字符有:" + onlyAllUtf8.size() + "个,分别是:");
+//        onlyAllUtf8.stream().forEach(item -> System.out.print(item));
+//        System.out.println();
 
-        System.out.println("全字符对比");
-        System.out.println("只在gb18030中出现的字符有:" + onlyAllGB18030.size() + "个,分别是:");
-        onlyAllGB18030.stream().forEach(item -> System.out.print(item));
-        System.out.println();
-        System.out.println("只在UTF8中出现的字符有:" + onlyAllUtf8.size() + "个,分别是:");
-        onlyAllUtf8.stream().forEach(item -> System.out.print(item));
-        System.out.println();
 
-
-        System.out.println("中文对比");
+        System.out.println("<===中文对比====>");
         Set<String> gb18030 = genA180ll30ChineseCharacter();
         Set<String> utf8 = genAllUtf8ChineseCharacter();
 
@@ -54,7 +114,26 @@ public class UTF8VSGB18303 {
         System.out.println();
     }
 
-    public static Set<String> genAllUtf8ChineseCharacter() {
+    public static void strange(String charset){
+        Set<String> strange = readFromResource("生僻字.txt");
+//        Charset utf8Charset = Charset.forName("UTF-8");
+        Charset charset1 = Charset.forName(charset);
+        CharsetEncoder charsetEncoder = charset1.newEncoder();
+        AtomicInteger strangeCount = new AtomicInteger();
+        strange.forEach(item->{
+            if(!charsetEncoder.canEncode(item)){
+                strangeCount.getAndIncrement();
+            }
+        });
+
+            System.out.println(String.format("%s在5000个生僻字中,不兼容个数为:%s",charset,strangeCount));
+
+    }
+    public static Set<String> genAllUtf8ChineseCharacter() throws UnsupportedEncodingException {
+        System.out.println("UTF-8--------->");
+
+        strange("UTF-8");
+
         Set<String> utf8HanCharacters = new HashSet<>();
 
         // 遍历基本汉字（\u4E00 到 \u9FFF）
@@ -93,6 +172,13 @@ public class UTF8VSGB18303 {
         // 打印前 10 个汉字作为示例
         System.out.println("UTF-8 支持的汉字示例:");
         utf8HanCharacters.stream().limit(10).forEach(System.out::print);
+        System.out.println();
+
+        StringBuilder allStringByteSize = new StringBuilder();
+        utf8HanCharacters.forEach(item->allStringByteSize.append(item));
+        String allString = allStringByteSize.toString();
+        byte[] allbyte = allString.getBytes("UTF-8");
+        System.out.println(String.format("存储%s个汉字，占用内存：%s位字节",allString.length(),allbyte.length));
         return utf8HanCharacters;
     }
 
@@ -103,7 +189,7 @@ public class UTF8VSGB18303 {
         }
     }
 
-    public static Set<String> genAllGB18030(){
+    public static Set<String> genAllGB18030() throws UnsupportedEncodingException {
         Charset gb18030Charset = Charset.forName("GB18030");
         CharsetDecoder decoder = gb18030Charset.newDecoder();
 
@@ -148,9 +234,14 @@ public class UTF8VSGB18303 {
         // 输出字符总数
         System.out.println("GB18030 支持的字符总数: " + gb18030Characters.size());
 
+        StringBuilder allStringByteSize = new StringBuilder();
+        gb18030Characters.forEach(item->allStringByteSize.append(item));
+        String allString = allStringByteSize.toString();
+        byte[] allbyte = allString.getBytes("UTF8");
+        System.out.println(String.format("GB18030存储%s个全字符，占用内存：%s位字节，平均每个字符占用%s个字节\n",allString.length(),allbyte.length,allbyte.length/allString.length()));
         // 输出前 10 个字符作为示例
-        System.out.println("GB18030 支持的字符示例:");
-        gb18030Characters.stream().limit(10).forEach(System.out::print);
+//        System.out.println("GB18030 支持的字符示例:");
+//        gb18030Characters.stream().limit(10).forEach(System.out::print);
         return gb18030Characters;
     }
     // 解码 GB18030 字节数组为字符
@@ -162,8 +253,9 @@ public class UTF8VSGB18303 {
         }
     }
 
-    public static Set<String> genAllUtf8(){
+    public static Set<String> genAllUtf8() throws UnsupportedEncodingException {
         Set<String> utf8 = new HashSet<>();
+
         for (int codePoint = Character.MIN_CODE_POINT; codePoint <= Character.MAX_CODE_POINT; codePoint++) {
             if (Character.isDefined(codePoint)) {  // 检查码点是否为有效字符
                 String character = new String(Character.toChars(codePoint));  // 将码点转换为字符
@@ -172,6 +264,13 @@ public class UTF8VSGB18303 {
             }
         }
         System.out.println("UTF8 支持的字符数量: " + utf8.size());
+        StringBuilder allStringByteSize = new StringBuilder();
+        utf8.forEach(item->allStringByteSize.append(item));
+        String allString = allStringByteSize.toString();
+        byte[] allbyte = allString.getBytes("UTF8");
+        System.out.println(String.format("UTF-8存储%s个全字符，占用内存：%s位字节，平均每个字符占用%s个字节",allString.length(),allbyte.length,allbyte.length/allString.length()));
+
+
         return utf8;
     }
     private static String bytesToHex(byte[] bytes) {
@@ -181,7 +280,10 @@ public class UTF8VSGB18303 {
         }
         return sb.toString().trim();
     }
-    public static Set<String> genA180ll30ChineseCharacter() {
+    public static Set<String> genA180ll30ChineseCharacter() throws UnsupportedEncodingException {
+        System.out.println("GB18030--------->");
+
+        strange("GB18030");
         Set<String> gb18030HanCharacters = new HashSet<>();
 
         // 遍历双字节区间
@@ -218,6 +320,11 @@ public class UTF8VSGB18303 {
         System.out.println("GB18030 支持的汉字示例:");
         gb18030HanCharacters.stream().limit(10).forEach(System.out::print);
         System.out.println();
+        StringBuilder allStringByteSize = new StringBuilder();
+        gb18030HanCharacters.forEach(item->allStringByteSize.append(item));
+        String allString = allStringByteSize.toString();
+        byte[] allbyte = allString.getBytes("GB18030");
+        System.out.println(String.format("存储%s个汉字，占用内存：%s位字节",allString.length(),allbyte.length));
         return gb18030HanCharacters;
     }
 
