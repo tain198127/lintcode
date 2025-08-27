@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vote Button</title>
+</head>
+<body>
+
+<!-- 一个简单的按钮，用户点击后发送投票 -->
+<button id="loginBtn">微信登录</button>
+
+<button onclick="submitVote()">Vote</button>
+<script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js">
+
+</script>
+<script>
+
+  wx.config({
+    debug: false, // 是否开启调试模式
+    appId: 'YOUR_APP_ID', // 公众号的唯一标识
+    timestamp: 'YOUR_TIMESTAMP', // 生成签名的时间戳
+    nonceStr: 'YOUR_NONCE_STR', // 生成签名的随机字符串
+    signature: 'YOUR_SIGNATURE', // 签名
+    jsApiList: ['checkJsApi', 'chooseWXPay', 'updateAppMessageShareData', 'updateTimelineShareData', 'onMenuShareAppMessage', 'onMenuShareTimeline', 'getLocation', 'openLocation', 'hideMenuItems'] // 需要使用的JS接口列表
+  });
+
+  // 定义一个函数来发送投票请求
+  function submitVote() {
+    // 创建一个XMLHttpRequest对象
+    var xhr = new XMLHttpRequest();
+    // 配置请求的URL和方法
+    xhr.open("POST", "http://localhost:9980/vote", true);
+    // 设置请求头，告诉服务器我们发送的是JSON数据
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    // 定义响应处理函数
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4 && xhr.status === 200) {
+        // 请求成功，处理服务器返回的数据
+        console.log(xhr.responseText);
+        alert('Vote recorded successfully!');
+      }
+    };
+    // 准备要发送的数据
+    var data = JSON.stringify({
+      topic: 'topic_', // 这里假设topic是用户点击按钮时提供的
+      vote: 13
+    });
+    // 发送请求
+    xhr.send(data);
+  }
+</script>
+
+</body>
+</html>

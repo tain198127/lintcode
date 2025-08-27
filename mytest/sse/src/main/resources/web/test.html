@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>SSE 测试客户端</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #log {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            height: 200px;
+            overflow-y: auto;
+            background: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+<h1>SSE 监听器</h1>
+<button onclick="startSSE()">开始监听</button>
+<div id="log">等待服务端推送...</div>
+
+<script>
+    let evtSource;
+
+    function startSSE() {
+        if (evtSource) {
+            evtSource.close();
+        }
+
+        evtSource = new EventSource("http://localhost:9980/sse");
+
+        evtSource.onopen = function () {
+            logMessage("✅ 已连接到 SSE 服务端");
+        };
+
+        evtSource.onmessage = function (event) {
+            logMessage("📩 收到消息: " + event.data);
+        };
+
+        evtSource.onerror = function (err) {
+            logMessage("❌ SSE 错误: " + JSON.stringify(err));
+        };
+    }
+
+    function logMessage(msg) {
+        const log = document.getElementById("log");
+        const time = new Date().toLocaleTimeString();
+        log.innerHTML += `<div>[${time}] ${msg}</div>`;
+        log.scrollTop = log.scrollHeight;
+    }
+</script>
+</body>
+</html>

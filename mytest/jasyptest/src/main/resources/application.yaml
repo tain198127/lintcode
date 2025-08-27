@@ -1,0 +1,10 @@
+spring:
+  profiles:
+    active: dev,test,prod
+
+jasypt:
+  encryptor:
+    algorithm: PBEWITHHMACSHA512ANDAES_256
+    password: password
+
+

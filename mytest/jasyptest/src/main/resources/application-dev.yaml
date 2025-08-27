@@ -1,0 +1,5 @@
+userprop: uli
+defaultPassword: ENC(Zu51R5wTUaBbhJJoj8usPJ+h3Rd4Mw8qU1NxqOtSPJM0nZaYhhdpndWp1xcEdvsr)
+# works with @EnableEncryptableProperties and StandardEncryptableEnvironment
+endpoint: https://${userprop}:${defaultPassword}@localhost:30000
+keyIdx: 1
